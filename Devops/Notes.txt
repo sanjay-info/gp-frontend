@@ -1,0 +1,9 @@
+#Build cmd
+
+<!-- 1.npm run build  -->
+
+#Start cmd
+
+<!-- npm install -- > For the first time clone  -->
+
+<!-- npm start  -->

@@ -1,0 +1,12 @@
+export const loginSide = process.env.PUBLIC_URL + '/images/sideImg.jpg';
+export const gp_logo = process.env.PUBLIC_URL + '/images/gp_logo.png';
+export const Tolkappiyam = process.env.PUBLIC_URL + '/images/Tolkappiyam.jpg';
+export const gp_locationmap = process.env.PUBLIC_URL + '/images/gplocationmap.png';
+export const ourvision = process.env.PUBLIC_URL + '/images/ourvisionlst.jpg'
+export const youtime = process.env.PUBLIC_URL + '/images/you-time.jpg'
+export const profile = process.env.PUBLIC_URL + '/images/profile.jpg'
+export const declarationformpdf = process.env.PUBLIC_URL + '/pdf/FEMADECLARATION.pdf'
+export const nritermsofofferPdf = process.env.PUBLIC_URL + '/pdf/7D_NRI_Offer.pdf'
+export const ritermsofofferPdf = process.env.PUBLIC_URL + '/pdf/7E_RI_Offer.pdf'
+export const samplePdf = process.env.PUBLIC_URL + '/pdf/Sample_data.pdf'
+export const myprofileoffer = process.env.PUBLIC_URL + '/pdf/share_application_Indian_Terms_Conditions.pdf'

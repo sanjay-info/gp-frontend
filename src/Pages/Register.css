@@ -1,0 +1,356 @@
+.register_container {
+    /* position: relative; */
+    width: 100%;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    z-index: 1;
+    overflow-y: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.sf_container {
+    margin: 20px auto;
+    box-shadow: 0px -4px 8px rgba(0, 0, 0, 0.1), 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.holding_container {
+    position: relative;
+    width: 100%;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    z-index: 1;
+    overflow-y: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* margin-bottom: 20px; */
+}
+
+.payment_container {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    z-index: 1;
+    overflow-y: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 0;
+}
+
+.register_card {
+    width: 600px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 2;
+    padding: 40px;
+}
+
+.register_form {
+    padding-top: 10px;
+}
+
+.img_preview {
+    width: 240px;
+    height: 150px;
+    margin: 10px;
+}
+
+.img_preview_cam {
+    width: 240px;
+    height: 150px;
+}
+
+@media (max-width: 576px) {
+    .img_preview {
+        width: 220px;
+        height: 150px;
+        margin-top: 10px;
+    }
+}
+
+.gpbond_card {
+    width: 100%;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 2;
+    padding: 70px;
+}
+
+.gpbond_text {
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 28.13px;
+    color: black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.gpbond_hed {
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 28.13px;
+    color: black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.bond_label {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.tand_label {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.tand_label span {
+    text-align: justify;
+    /* Applying justify alignment to spans */
+}
+
+@media only screen and (max-width: 1445px) {
+    .bond_label {
+        font-size: 11.5px;
+    }
+}
+
+.cnt {
+    display: flex;
+    align-items: center;
+}
+
+.forminpt {
+    width: 240px;
+    border-radius: 5px;
+    border-color: antiquewhite;
+}
+
+.forminpt.active {
+    border-bottom: 1px solid black;
+}
+
+@media (max-width: 983px) {
+    .gpbond_text {
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 925px) {
+    .gpbond_text {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 830px) {
+    .gpbond_text {
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 600px) {
+    .gpbond_card {
+        width: 100%;
+        padding: 20px;
+    }
+
+    .gpbond_text {
+        font-size: 13px;
+        line-height: 24px;
+        padding: 5px;
+        text-align: center;
+    }
+
+    .forminpt {
+        width: 100%;
+        margin-left: 0;
+        padding-top: 5px;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .col-12 {
+        flex-basis: 100% !important;
+        max-width: 100% !important;
+    }
+}
+
+/* Additional styles */
+.responsive-column {
+    padding: 10px;
+    gap: 2px;
+    border-radius: 5px;
+}
+
+/* ---------- register--------- */
+
+.inves_card {
+    width: 100%;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    z-index: 2;
+    padding: 30px;
+}
+
+.inves_card .inves_div {
+    margin-bottom: 10px;
+}
+
+.inverscontainer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.invsalig {
+    margin-top: 30px;
+    display: flex;
+    align-items: "flex-end";
+}
+
+/* ---------- Order Summary--------- */
+.Summary_card {
+    width: 100%;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 2;
+    padding: 30px;
+    /* border-radius: 20px; */
+}
+
+@media (max-width: 450px) {
+    .Summary_card {
+        padding: 20px;
+    }
+}
+
+.HoldingSummary_card {
+    width: 100%;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 2;
+    /* padding: 30px; */
+    /* border-radius: 20px; */
+}
+
+@media (max-width: 450px) {
+    .HoldingSummary_card {
+        padding: 20px;
+    }
+}
+
+.card_homepage {
+    width: 10%;
+    height: 100px;
+    background-color: aqua;
+    /* background-color: white; */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 2;
+    padding: 30px;
+}
+
+/* ---------------Homepage -------- */
+
+.card-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+
+}
+
+.card {
+    flex: 0 0 calc(33.33% - 10px);
+    margin-bottom: 20px;
+}
+
+.card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-5px);
+    transition: all 0.3s ease-in-out;
+}
+
+/* tabs */
+
+.salesforce-tabs {
+    display: flex;
+    margin-bottom: 10px;
+    /* background-color: #fafafa; */
+}
+
+/* .salesforce-tabs button {
+    background-color: white;
+    border: 2px solid #404AB1;
+    color: black;
+    font-weight: bold;
+    outline: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 10px 20px;
+    transform: skew(0deg);
+    border-top-left-radius: 10px; */
+/* border-bottom-left-radius: 10px; */
+/* border-top-right-radius: 10px; */
+/* border-bottom-right-radius: 10px;
+} */
+.salesforce-tabs button {
+    background-color: white;
+    border: 2px solid rgb(190, 219, 253);
+    color: black;
+    font-weight: bold;
+    outline: none;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 10px 20px;
+    transform: skew(0deg);
+    border-top-left-radius: 10px;
+    /* border-bottom-left-radius: 10px; */
+    /* border-top-right-radius: 10px; */
+    border-bottom-right-radius: 10px;
+}
+
+@media (max-width: 768px) {
+    .salesforce-tabs button {
+        padding: 7px;
+    }
+
+    .appcerdwn {
+        margin-bottom: 5px;
+        display: flex;
+        /* display: block; */
+        justify-content: center;
+    }
+
+    .btn-container {
+        display: flex;
+        margin-top: 5px;
+    }
+}
+
+.salesforce-tabs button.active {
+    border-bottom: 2px solid #404AB1;
+    color: black;
+    font-weight: bold;
+    background-color: rgb(190, 219, 253);
+    border-top-left-radius: 10px;
+    /* border-bottom-left-radius: 10px; */
+    /* border-top-right-radius: 10px; */
+    border-bottom-right-radius: 10px;
+}
+
+.salesforce-tabs button.active span {
+    display: inline-block;
+}

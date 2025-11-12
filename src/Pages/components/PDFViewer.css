@@ -1,0 +1,49 @@
+/* .pdf-viewer-container {
+    height: 500px;
+    width: 100%;
+}
+
+.zoom-controls {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.download-button {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .zoom-controls {
+        display: flex;
+    }
+
+    .download-button {
+        display: none;
+    }
+}
+
+@media (max-width: 767px) {
+    .zoom-controls {
+        display: none;
+    }
+
+    .download-button {
+        display: flex;
+        justify-content: flex-end;
+        margin: 10px;
+    }
+} */
+
+.pdf-viewer-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#toolbarViewerMiddle, #editorHighlight {
+    display: none !important;
+}

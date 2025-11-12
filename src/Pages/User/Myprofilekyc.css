@@ -1,0 +1,86 @@
+.headerProfile {
+    display: flex;
+}
+
+.headercontainer {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+}
+
+.reson_text {
+    width: 100%;
+    word-wrap: break-word;
+    word-break: break-word;
+    white-space: normal;
+    overflow-wrap: break-word;
+}
+
+@media (max-width: 576px) {
+    .headercontainer {
+        display: flex;
+        margin-top: 5px;
+        flex-direction: column;
+        gap: 0px;
+    }
+}
+
+.chk {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+.webCam {
+    width: 200px;
+    height: 200px;
+}
+
+.centered_check {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+.clickhere {
+    cursor: pointer;
+    color: blue;
+}
+
+.recapture {
+    display: flex;
+    gap: 15px;
+}
+
+.capbtn {
+    width: 30%;
+}
+
+.Myprofile_agree {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 16.41px;
+    color: var(--label-color);
+}
+
+@media (max-width: 499px) {
+    .Myprofile_agree {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 420px) {
+    .Myprofile_agree {
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 380px) {
+    .Myprofile_agree {
+        font-size: 9px;
+    }
+}

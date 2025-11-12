@@ -1,0 +1,199 @@
+.bondimgPreview {
+    max-width: 100%;
+    max-height: 100px;
+    margin-top: 5px;
+}
+
+.bondagree {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-top: 10px;
+}
+
+.required {
+    top: -5px;
+    position: relative;
+}
+
+.payment_div {
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+    margin-top: 2%
+}
+
+.Payment_card {
+    width: 100%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 2;
+    padding: 30px;
+    margin-top: 2%;
+    background-image: repeating-radial-gradient(circle at center center, transparent 0px, transparent 2px, rgba(0, 0, 0, 0.03) 2px, rgba(0, 0, 0, 0.03) 3px, transparent 3px, transparent 5px, rgba(0, 0, 0, 0.03) 5px, rgba(0, 0, 0, 0.03) 7px), repeating-radial-gradient(circle at center center, rgb(255, 255, 255) 0px, rgb(255, 255, 255) 9px, rgb(255, 255, 255) 9px, rgb(255, 255, 255) 21px, rgb(255, 255, 255) 21px, rgb(255, 255, 255) 31px, rgb(255, 255, 255) 31px, rgb(255, 255, 255) 40px);
+    background-size: 20px 20px;
+}
+
+
+.subt_btn {
+    background-color: var(--primary-color);
+    border: none;
+    display: flex;
+    width: 20%;
+    padding: 14px 28px;
+    justify-content: center;
+    align-items: center;
+    margin-top: 30px;
+    border-radius: 6px;
+    color: white;
+}
+
+.payment_head {
+    display: flex;
+    justify-content: space-between
+}
+
+@media only screen and (max-width: 768px) {
+    .payment_div {
+        flex-direction: column;
+    }
+
+    .Payment_card {
+        padding: 15px;
+    }
+
+    .subt_btn {
+        width: 50%;
+        padding: 10px 10px;
+        font-size: small;
+    }
+
+    .payment_head {
+        flex-direction: column;
+        row-gap: 5px;
+        padding-bottom: 5px;
+    }
+}
+@media only screen and (max-width: 980px) {
+    .subt_btn {
+        width: 50%;
+        padding: 10px 10px;
+        font-size: small;
+    }
+}
+
+.checkbox_div {
+    display: flex;
+    align-items: center;
+    margin-top: 3%;
+    justify-content: center;
+}
+
+.checkbox_div input[type="checkbox"] {
+    margin-right: 5px;
+    flex-shrink: 0;
+}
+
+.checkbox_div label {
+    line-height: 1.5;
+    margin-top: -6px;
+}
+
+.temscheckbox_div {
+    display: flex;
+    align-items: center;
+    margin-top: 1%;
+    justify-content: center;
+}
+
+.temscheckbox_div input[type="checkbox"] {
+    margin-right: 5px;
+    flex-shrink: 0;
+}
+
+.temscheckbox_div label {
+    line-height: 1.5;
+    margin-top: -5px;
+}
+
+.payment_table {
+    width: 100%;
+    padding: 10px;
+}
+
+.payment_table th {
+    background-color: #E6E6E6;
+    padding: 10px;
+}
+
+.payment_table td {
+    padding: 10px;
+}
+
+.payment_icon_div {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.payment_div_head {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 500;
+    padding: 10px;
+}
+
+.payment_div_foot {
+    width: 100%;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.payment_div_foot .btn {
+    padding: 5px 40px;
+}
+
+.form_checkbox_div {
+    display: flex;
+    margin-top: 3%;
+}
+
+.form_checkbox_div input[type="checkbox"] {
+    margin-right: 5px;
+    flex-shrink: 0;
+}
+
+.form_checkbox_div label {
+    margin-top: -5px;
+}
+
+@media only screen and (max-width: 600px) {
+    .checkbox_div {
+        align-items: flex-start;
+        margin-top: 10%;
+    }
+
+    .checkbox_div label {
+        line-height: 1.4;
+    }
+
+    .temscheckbox_div {
+        margin-top: 10%;
+    }
+
+    .temscheckbox_div {
+        line-height: 1.4;
+
+    }
+
+    .checkboxlabel {
+        padding-top: 2px
+    }
+}
+
+.checkboxlabel {
+    padding-top: 4px
+}

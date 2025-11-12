@@ -1,0 +1,23 @@
+.aboutheader {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
+.aboutcontent {
+    padding-top: 5px;
+}
+
+.abouticon {
+    color: #FB7B00;
+}
+
+.par {
+    font-size: 14px;
+}
+
+@media only screen and (max-width: 768px) {
+    .aboutcontent {
+        padding-top: 0px;
+    }
+}

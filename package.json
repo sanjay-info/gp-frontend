@@ -1,0 +1,79 @@
+{
+  "name": "goldenplanet",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.0",
+    "@material-table/core": "^6.3.2",
+    "@mui/core": "^5.0.0-alpha.54",
+    "@mui/material": "^5.15.13",
+    "@mui/x-data-grid": "^6.19.11",
+    "@stomp/stompjs": "^7.0.0",
+    "@tensorflow-models/blazeface": "^0.1.0",
+    "@tensorflow/tfjs": "^4.20.0",
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "aos": "^2.3.4",
+    "axios": "^1.6.7",
+    "bootstrap": "^5.3.3",
+    "buffer": "^6.0.3",
+    "compressorjs": "^1.2.1",
+    "cors": "^2.8.5",
+    "country-codes-list": "^1.6.11",
+    "crypto-js": "^4.2.0",
+    "disable-devtool": "^0.3.7",
+    "dotenv": "^16.4.5",
+    "echarts": "^5.5.0",
+    "moment": "^2.30.1",
+    "pdfjs-viewer-element": "^2.6.5",
+    "react": "^18.2.0",
+    "react-bootstrap": "^2.10.2",
+    "react-data-table-component": "^7.6.2",
+    "react-datepicker": "^7.0.0",
+    "react-dom": "^18.2.0",
+    "react-icons": "^5.0.1",
+    "react-image-lightbox": "^5.1.4",
+    "react-infinite-scroll-component": "^6.1.0",
+    "react-loader-spinner": "^6.1.6",
+    "react-phone-input-2": "^2.15.1",
+    "react-phone-number-input": "^3.4.3",
+    "react-pro-sidebar": "^1.1.0",
+    "react-razorpay": "^2.0.1",
+    "react-router-dom": "^6.22.3",
+    "react-scripts": "5.0.1",
+    "react-select": "^5.8.0",
+    "react-toastify": "^10.0.5",
+    "react-webcam": "^7.2.0",
+    "simple-lightbox": "^2.1.0",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "set CI=false && react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "ajv": "^7.2.4"
+  }
+}
