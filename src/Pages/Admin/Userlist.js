@@ -1,32 +1,27 @@
-import React, { useState, useEffect, useRef } from 'react';
-import InfiniteScroll from 'react-infinite-scroll-component';
-import Header from '../components/Header';
+import React, { useState, useEffect, useRef } from "react";
+import Header from "../components/Header";
 import SidePanel from "../components/SidePanel";
 import { useSidebar } from "../components/SidebarContext";
-import { useAppContext } from '../components/AppProvider';
+import { useAppContext } from "../components/AppProvider";
 import { BsPlus } from "react-icons/bs";
-import Select from 'react-select';
-import axios from 'axios';
-import Aos from 'aos';
-import 'aos/dist/aos.css';
-import { useNavigate } from 'react-router-dom';
+import Select from "react-select";
+import Aos from "aos";
+import "aos/dist/aos.css";
+import { useNavigate, useLocation } from "react-router-dom";
 import "./Userlist.css";
-import Alert from '../components/Alert';
-import { ThreeDots } from 'react-loader-spinner';
-import MaterialTable from '@material-table/core';
-import TableOptions from '../components/TableOptions';
+import Alert from "../components/Alert";
+import MaterialTable from "@material-table/core";
+import TableOptions from "../components/TableOptions";
 
 const Userlist = () => {
     const { PostApi } = useAppContext();
     const { sideBarCollapse } = useSidebar();
+
     const [userid] = useState(localStorage.getItem("user_id"));
     const [token] = useState(localStorage.getItem("token"));
 
     const [filterNum, setFilterNum] = useState(1);
-    const [tableQuery, setTableQuery] = useState({ page: 0, pageSize: 5 });
-    const [tableData, setTableData] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [hasMore, setHasMore] = useState(true);
+    const [accountTypeFilter, setAccountTypeFilter] = useState("ALL");
 
     const tableRef = useRef(null);
 
@@ -36,321 +31,289 @@ const Userlist = () => {
     const [alertTittle, setAlertTittle] = useState("");
     const [alertClose, setAlertClose] = useState(() => null);
 
-    const filterOptions = [
-        { value: 1, label: 'Active' },
-        { value: 2, label: 'Inactive' },
-        { value: 3, label: 'Disabled' }
-    ];
+    const navigate = useNavigate();
+    const location = useLocation();
 
-    useEffect(() => {
-        Aos.init({
-            duration: 3000,
-            once: true,
-        });
-    }, []);
-
-    // useEffect(() => {
-    //     const loadInitialData = async () => {
-    //         setLoading(true);
-    //         const initialData = await fetchTableData({ page: 0, pageSize: 5 }, filterNum);
-    //         setTableData(initialData);
-    //         setTableQuery({ page: 1, pageSize: 5 });
-    //         setLoading(false);
-    //     };
-
-    //     loadInitialData();
-    // }, [filterNum]);
-
-    // useEffect(() => {
-    //     const loadInitialData = async () => {
-    //         setLoading(true);
-    //         const initialData = await fetchTableData({ page: 0, pageSize: 5 }, filterNum);
-
-    //         setTableData(initialData.items);
-    //         // setTotalElements(initialData.totalElements);
-    //         setTableQuery({ page: 1, pageSize: 5 });
-    //         setLoading(false);
-    //     };
-
-    //     loadInitialData();
-    // }, [filterNum]);
-
-    const handleFilterChange = (selectedOption) => {
-        setFilterNum(selectedOption.value);
-        // setTableQuery({ page: 0, pageSize: 5 });
-        // setTableData([]);
-        // setHasMore(true);
-        tableRef.current.onQueryChange();
-    };
+    const isLoanerPage = location.pathname === "/Loaners";
 
     const headers = {
         Authorization: `Bearer ${token}`,
     };
-    const navigate = useNavigate();
 
-    const handleAddUser = () => {
-        navigate('/AdminCreateuser');
+    useEffect(() => {
+        Aos.init({ duration: 3000, once: true });
+    }, []);
+
+    useEffect(() => {
+        if (tableRef.current) {
+            tableRef.current.onQueryChange();
+        }
+    }, [location.pathname]);
+
+    /* ================= FILTER OPTIONS ================= */
+
+    const filterOptions = [
+        { value: 1, label: "Active" },
+        { value: 2, label: "Inactive" },
+        { value: 3, label: "Disabled" },
+    ];
+
+    const accountTypeOptions = [
+        { value: "ALL", label: "All" },
+        { value: "INDIVIDUAL", label: "Individual" },
+        { value: "COMPANY", label: "Company" },
+        { value: "BANK", label: "Bank" },
+        { value: "NBFC", label: "NBFC" },
+    ];
+
+    const handleFilterChange = (opt) => {
+        setFilterNum(opt.value);
+        tableRef.current.onQueryChange();
     };
 
+    /* ================= ACTIONS ================= */
+
+    const handleAddUser = () => navigate("/AdminCreateuser");
     const handleViewUser = (id) => {
-        navigate('/ViewUserByadmin', { state: { id: id } });
+        if (location.pathname === "/Loaners") {
+            navigate("/ViewLoanerByAdmin", { state: { id } });
+        } else {
+            navigate("/ViewUserByadmin", { state: { id } });
+        }
     };
 
     const sentPassword = (id) => {
-        const method = 'POST';
         const url = `/user/admin/sendPwd?id=${id}&loginId=${userid}`;
-        const data = {};
-        PostApi(method, url, data, headers)
-            .then((response) => {
-                if (response.data.status === 200) {
-                    setUserAlert(true);
-                    setAlertTittle("");
-                    setAlertMsg(response.data.message);
-                    setAlertClose(() => () => {
-                        setUserAlert(false)
-                        window.location.reload();
-                    });
-                    setAlertType("info");
-                }
-                else if (response.data.status === 409) {
-                    setUserAlert(true);
-                    setAlertTittle("");
-                    setAlertMsg(response.data.message);
-                    setAlertClose(() => () => {
-                        setUserAlert(false)
-                        window.location.reload();
-                    });
-                    setAlertType("info");
-                }
-            })
-            .catch((error) => {
-                console.log("Error sending password:", error);
-            });
-    };
-
-    const fetchTableData = (query, filterNumber) => {
-        return new Promise(async (resolve, reject) => {
-            const method = 'POST';
-            const url = `/user/admin/all?filter=${filterNumber}&pageNo=${query.page}&pageSize=${query.pageSize}`;
-            const data = null;
-            try {
-                const response = await PostApi(method, url, data, headers);
-                if (response.data.status === 200) {
-                    resolve({
-                        data: response.data.data,
-                        page: response.data.pageNo,
-                        totalCount: response.data.totalElements,
-                    });
-                } else {
-                    resolve({
-                        data: [],
-                        page: response.data.pageNo,
-                        totalCount: 0,
-                    });
-                }
-            } catch (error) {
-                console.log("Error fetching table data:", error);
-                resolve({
-                    data: [],
-                    page: query.page,
-                    totalCount: 0,
-                });
-            }
+        PostApi("POST", url, {}, headers).then((res) => {
+            setUserAlert(true);
+            setAlertMsg(res.data.message);
+            setAlertType("info");
+            setAlertClose(() => () => setUserAlert(false));
         });
     };
 
-    const loadMoreData = async () => {
-        if (loading || !hasMore) return;
-        setLoading(true);
-        setTimeout(async () => {
-            const data = await fetchTableData(tableQuery, filterNum);
-            setTableData(prevData => [...prevData, ...data]);
-            setLoading(false);
-            if (data.length === 0) {
-                setHasMore(false);
-            } else {
-                setTableQuery(prevQuery => ({ ...prevQuery, page: prevQuery.page + 1 }));
+    /* ================= API ================= */
+
+    const fetchTableData = async (query, filterNumber) => {
+        let opportunityRecordId = "";
+
+        if (location.pathname === "/Investors") opportunityRecordId = 1;
+        if (location.pathname === "/Loaners") opportunityRecordId = 2;
+
+        const url = `/user/admin/all?filter=${filterNumber}&pageNo=${query.page}&pageSize=${query.pageSize}${opportunityRecordId
+            ? `&opportunityRecordTypeId=${opportunityRecordId}`
+            : ""
+            }`;
+
+        try {
+            const res = await PostApi("POST", url, null, headers);
+            let users = res.data?.data || [];
+
+            // Investors filter
+            if (location.pathname === "/Investors") {
+                users = users.filter(
+                    (u) =>
+                        !u.opportunityRecordTypes ||
+                        u.opportunityRecordTypes.some(
+                            (t) => t.opportunityRecordType?.toUpperCase() === "INVESTER"
+                        )
+                );
             }
-        }, 1000);
+
+            // Loaners + Account Type filter
+            if (location.pathname === "/Loaners") {
+                users = users.filter((u) =>
+                    u.opportunityRecordTypes?.some(
+                        (t) => t.opportunityRecordType?.toUpperCase() === "LOANER"
+                    )
+                );
+
+                if (accountTypeFilter !== "ALL") {
+                    users = users.filter(
+                        (u) =>
+                            u.accountType?.accountType?.toUpperCase() === accountTypeFilter
+                    );
+                }
+            }
+
+            return {
+                data: users,
+                page: query.page,
+                totalCount: users.length,
+            };
+        } catch {
+            return { data: [], page: 0, totalCount: 0 };
+        }
     };
 
-    const columns = [
-        { title: 'Name', field: 'firstName' },
+    /* ================= TABLE COLUMNS ================= */
+
+    const investorColumns = [
+        { title: "Name", field: "firstName" },
         {
-            title: 'Email Address',
-            field: 'emailId',
-            render: rowData => rowData.emailId.length > 12 ? `${rowData.emailId.slice(0, 15)}...` : rowData.emailId
+            title: "Email",
+            render: (row) =>
+                row.emailId.length > 15
+                    ? `${row.emailId.slice(0, 15)}...`
+                    : row.emailId,
         },
         {
-            title: 'KYC Status',
-            field: 'kycVerified',
-            render: rowData => (
-                <span style={{ color: rowData.kycVerified ? 'green' : 'red' }}>
-                    {rowData.kycVerified ? 'Verified' : 'Not Verified'}
+            title: "KYC Status",
+            render: (row) => (
+                <span style={{ color: row.kycVerified ? "green" : "red" }}>
+                    {row.kycVerified ? "Verified" : "Not Verified"}
                 </span>
-            )
+            ),
         },
         {
-            title: 'Status',
-            field: 'active',
-            render: rowData => (
-                <span style={{ color: rowData.active ? 'green' : 'red' }}>
-                    {rowData.active ? 'Active' : 'In-Active'}
+            title: "Status",
+            render: (row) => (
+                <span style={{ color: row.active ? "green" : "red" }}>
+                    {row.active ? "Active" : "In-Active"}
                 </span>
-            )
+            ),
         },
         {
-            title: 'Action',
-            field: 'action',
-            render: rowData => (
-                <button type="button" className="btn btn-primary" onClick={() => handleViewUser(rowData.id)}>
+            title: "Action",
+            render: (row) => (
+                <button className="btn btn-primary" onClick={() => handleViewUser(row.id)}>
                     View
                 </button>
-            )
+            ),
         },
         {
-            title: 'Send Password',
-            field: 'sendPassword',
-            render: rowData => (
+            title: "Send Password",
+            render: (row) => (
                 <button
-                    type="button"
                     className="btn btn-primary"
-                    onClick={() => sentPassword(rowData.id)}
-                    disabled={!rowData.blocked}
+                    disabled={!row.blocked}
+                    onClick={() => sentPassword(row.id)}
                 >
                     Send
                 </button>
-            )
-        }
+            ),
+        },
     ];
+
+    const loanerColumns = [
+        {
+            title: "Name",
+            render: (row) => `${row.firstName} ${row.lastName || ""}`,
+        },
+        { title: "Email", field: "emailId" },
+        {
+            title: "Phone",
+            render: (row) =>
+                row.mobileNo ? `${row.countryCode} ${row.mobileNo}` : "-",
+        },
+        {
+            title: "Account Type",
+            render: (row) => row.accountType?.accountType || "-",
+        },
+        {
+            title: "Action",
+            render: (row) => (
+                <button className="btn btn-primary" onClick={() => handleViewUser(row.id)}>
+                    View
+                </button>
+            ),
+        },
+    ];
+
+    /* ================= RENDER ================= */
 
     return (
         <div>
             <Header />
             <SidePanel />
+
             <div className="page_container">
                 <div className={sideBarCollapse ? "main_content" : "main_content collapsed"}>
                     <div className="Summary_card">
-                        <div>
-                            <div className="welcome_text">
-                                <span>Golden Planet Users</span>
-                            </div>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                <button type="button" className="createbutton" style={{ marginTop: "20px" }} onClick={handleAddUser}>
-                                    <span className="createbutton__text" >Add Users</span>
+                        <div className="welcome_text">
+                            <span>Golden Planet Users</span>
+                        </div>
+
+                        {/* ===== TOP ACTIONS ===== */}
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                width: "100%",
+                                margin: "20px 0px",
+                            }}
+                        >
+                            {/* Left: Add User (Investors only) */}
+                            {location.pathname === "/Investors" && (
+                                <button className="createbutton" onClick={handleAddUser}>
+                                    <span className="createbutton__text">Add Users</span>
                                     <span className="createbutton__icon">
-                                        <BsPlus className="icon" />
+                                        <BsPlus />
                                     </span>
                                 </button>
+                            )}
 
-                                <Select
-                                    options={filterOptions}
-                                    value={filterOptions.find(option => option.value === filterNum)}
-                                    onChange={handleFilterChange}
-                                    placeholder="Select Approval Status"
-                                />
-                            </div>
-                            <div style={{ marginTop: "20px" }}>
-
-                                {/* <InfiniteScroll
-                                    dataLength={tableData.length}
-                                    next={loadMoreData}
-                                    hasMore={hasMore}
-                                    loader={<ThreeDots strokeColor="#659DBD" animationDuration="0.50" visible={loading} />}
-                                    endMessage={
-                                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: "center", marginTop: "2%" }}><p>No records to display</p></div>}
-                                    scrollThreshold={0.9}
-                                >
-                                    <div className="admin-card" data-aos="zoom-in" >
-                                        <div className="row">
-                                            <div className="col-md-1 inverscontainer">
-                                                <label className="projectlable">Name</label>
-                                            </div>
-                                            <div className="col-md-2 inverscontainer">
-                                                <label className="projectlable">Email Address</label>
-                                            </div>
-
-                                            <div className="col-md-2 inverscontainer">
-                                                <label className="projectlable">KYC Status</label>
-                                            </div>
-                                            <div className="col-md-2 inverscontainer">
-                                                <label className="projectlable">Status</label>
-                                            </div>
-                                            <div className="col-md-2 inverscontainer" >
-                                                <label className="projectlable" >Action</label>
-                                            </div>
-                                            <div className="col-md-2 inverscontainer" >
-                                                <label className="projectlable" >Send Password</label>
-                                            </div>
-                                        </div>
+                            {/* Right: Filters */}
+                            <div
+                                style={{
+                                    marginLeft: "auto",
+                                    display: "flex",
+                                    gap: "12px",
+                                }}
+                            >
+                                {/* Account Type Filter – Loaners only */}
+                                {isLoanerPage && (
+                                    <div style={{ width: 220 }}>
+                                        <Select
+                                            options={accountTypeOptions}
+                                            value={accountTypeOptions.find(
+                                                (o) => o.value === accountTypeFilter
+                                            )}
+                                            onChange={(opt) => {
+                                                setAccountTypeFilter(opt.value);
+                                                tableRef.current.onQueryChange();
+                                            }}
+                                            placeholder="Account Type"
+                                        />
                                     </div>
-                                    {tableData.map((item, index) => (
-                                        <div className="admin-card" data-aos="zoom-in" key={index}>
+                                )}
 
-                                            <div className="row">
-                                                <div className="col-md-1 inverscontainer">
-                                                    <text className='admintabletxt'>{item.firstName}</text>
-                                                </div>
-                                                <div className="col-md-2 inverscontainer">
-                                                    <text className='admintabletxt'>     {item.emailId.length > 12 ? `${item.emailId.slice(0, 15)}...` : item.emailId}</text>
-                                                </div>
-                                                <div className="col-md-2 inverscontainer">
-                                                    <text className='admintabletxt' style={{ color: item.kycVerified ? 'green' : 'red' }}>{item.kycVerified ? 'Verified' : 'Not Verified'}</text>
-                                                </div>
-                                                <div className="col-md-2 inverscontainer">
-                                                    <text className='admintabletxt' style={{ color: item.active ? 'green' : 'red' }}> {item.active ? 'Active' : 'In-Active'}
-                                                    </text>
-                                                </div>
-                                                <div className="col-md-2 inverscontainer">
-                                                    <button type='button' className="btn btn-primary" onClick={() => handleViewUser(item.id)}>View</button>
-                                                </div>
-                                                <div className="col-md-2 inverscontainer">
-                                                    <button
-                                                        type='button'
-                                                        className="btn btn-primary"
-                                                        onClick={() => sentPassword(item.id)}
-                                                        disabled={!item.blocked}
-                                                    >
-                                                        Send
-                                                    </button>
-
-                                                </div>
-
-                                            </div>
-
-
-                                        </div>
-                                    ))}
-                                </InfiniteScroll> */}
-
-                                <MaterialTable
-                                    style={{ marginTop: "20px" }}
-                                    title=""
-                                    columns={columns}
-                                    tableRef={tableRef}
-                                    data={(query) => fetchTableData(query, filterNum)}
-                                    options={{
-                                        ...TableOptions(),
-                                        search: false,
-                                        toolbar: false,
-                                    }}
-                                    onQueryChange={(query) => {
-                                        setTableQuery(query);
-                                        fetchTableData(query, filterNum);
-                                    }}
-                                />
+                                {/* Status Filter – Always */}
+                                <div style={{ width: 220 }}>
+                                    <Select
+                                        options={filterOptions}
+                                        value={filterOptions.find(
+                                            (o) => o.value === filterNum
+                                        )}
+                                        onChange={handleFilterChange}
+                                        placeholder="Status"
+                                    />
+                                </div>
                             </div>
                         </div>
+
+                        {/* ===== TABLE ===== */}
+                        <MaterialTable
+                            tableRef={tableRef}
+                            columns={isLoanerPage ? loanerColumns : investorColumns}
+                            data={(query) => fetchTableData(query, filterNum)}
+                            options={{
+                                ...TableOptions(),
+                                search: false,
+                                toolbar: false,
+                            }}
+                        />
                     </div>
                 </div>
-                <Alert
-                    title={alertTittle}
-                    msg={alertMsg}
-                    open={userAlert}
-                    type={alertType}
-                    onClose={alertClose}
-                />
             </div>
+
+            <Alert
+                open={userAlert}
+                title={alertTittle}
+                msg={alertMsg}
+                type={alertType}
+                onClose={alertClose}
+            />
         </div>
     );
 };

@@ -1,0 +1,92 @@
+/* ================= CONTAINER ================= */
+
+.IntentViewContainer {
+    padding: 20px;
+    font-size: 13px;
+}
+
+/* ================= HEADER ================= */
+
+.IV_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.IV_header h2 {
+    margin: 0;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+/* ================= CARD ================= */
+
+.IV_card {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.IV_card h4 {
+    margin-bottom: 16px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+/* ================= ROW STYLE (LEFT–RIGHT) ================= */
+
+.IV_row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px dashed #e5e7eb;
+}
+
+.IV_row span {
+    font-weight: 500;
+    color: #374151;
+}
+
+.IV_row p {
+    margin: 0;
+    color: #111827;
+}
+
+/* ================= DESCRIPTION ================= */
+
+.IV_description {
+    color: #374151;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* ================= TABLE ================= */
+
+.IV_table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.IV_table th,
+.IV_table td {
+    padding: 10px;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: left;
+    font-size: 13px;
+}
+
+.IV_table th {
+    background: #f3f4f6;
+    font-weight: 600;
+    color: #374151;
+}
+
+/* ================= EMPTY STATE ================= */
+
+.IV_empty {
+    color: #6b7280;
+    font-size: 13px;
+}

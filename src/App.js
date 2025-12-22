@@ -67,6 +67,13 @@ import DividendYear from './Pages/FINANCE/DividendYear';
 import OtpCenter from './Pages/Admin/OtpCenter';
 import LoginHistory from './Pages/Admin/LoginHistory';
 import AuditTrail from './Pages/Admin/AuditTrail';
+import IntentDetails from './Pages/Admin/IntentLoans';
+import LoanList from './Pages/Admin/Adminloan';
+import LoanView from './Pages/Admin/LoanView';
+import LoanApplications from './Pages/Admin/LoanApplication';
+import IntentView from './Pages/Admin/Intentview';
+import LoanApplicationView from './Pages/Admin/LoanApplicationView';
+import ViewUserAdminNew from './Pages/Admin/ViewloanesbyAdmin';
 
 const simplifiedConfig = {
   ondevtoolopen: (type, next) => {
@@ -195,7 +202,8 @@ function App() {
 
             {/* ----------------- admin ----------------------- */}
 
-            <Route path='/userList' element={roleId !== null && roleId !== undefined && roleId !== "" && storedRoleId[0].id === 1 ? <Userlist /> : <Login />}></Route>
+            <Route path='/Investors' element={roleId !== null && roleId !== undefined && roleId !== "" && storedRoleId[0].id === 1 ? <Userlist /> : <Login />}></Route>
+            <Route path='/Loaners' element={roleId !== null && roleId !== undefined && roleId !== "" && storedRoleId[0].id === 1 ? <Userlist /> : <Login />}></Route>
             <Route path='/AdminCreateuser' element={roleId !== null && roleId !== undefined && roleId !== "" && storedRoleId[0].id === 1 ? <AdminCreateuser /> : <Login />} />
             <Route path='/ViewUserByadmin' element={roleId !== null && roleId !== undefined && roleId !== "" && storedRoleId[0].id === 1 ? <ViewUserByadmin /> : <Login />} />
             <Route path='/Adminmsg' element={roleId !== null && roleId !== undefined && roleId !== "" && storedRoleId[0].id === 1 ? <AdminMsg /> : <Login />} />
@@ -207,7 +215,15 @@ function App() {
             <Route path='/OtpDetails' element={roleId !== null && roleId !== undefined && roleId !== "" && (storedRoleId[0].id === 1 || storedRoleId[0].id === 4) ? <OtpCenter /> : <Login />} />
             <Route path='/LoginHistory' element={roleId !== null && roleId !== undefined && roleId !== "" && (storedRoleId[0].id === 1 || storedRoleId[0].id === 4) ? <LoginHistory /> : <Login />} />
             <Route path='/AuditTrail' element={roleId !== null && roleId !== undefined && roleId !== "" && storedRoleId[0].id === 1 ? <AuditTrail /> : <Login />}></Route>
-        
+            <Route path='/AdminLoanIntent' element={roleId !== null && roleId !== undefined && roleId !== "" && storedRoleId[0].id === 1 ? <IntentDetails /> : <Login />}></Route>
+            <Route path='/AdminLoans' element={roleId !== null && roleId !== undefined && roleId !== "" && storedRoleId[0].id === 1 ? <LoanList /> : <Login />}></Route>
+            <Route path="/LoanView/:loanId" element={roleId !== null && roleId !== undefined && roleId !== "" && storedRoleId[0].id === 1 ? <LoanView /> : <Login />}></Route>
+            <Route path='/IntentView' element={roleId !== null && roleId !== undefined && roleId !== "" && storedRoleId[0].id === 1 ? <IntentView /> : <Login />}></Route>
+            <Route path='/LoanApplications' element={roleId !== null && roleId !== undefined && roleId !== "" && storedRoleId[0].id === 1 ? <LoanApplications /> : <Login />}></Route>
+            <Route path='/LoanApplicationView/:loanApplicationId' element={roleId !== null && roleId !== undefined && roleId !== "" && storedRoleId[0].id === 1 ? <LoanApplicationView /> : <Login />}></Route>
+            <Route path='/ViewLoanerByAdmin' element={roleId !== null && roleId !== undefined && roleId !== "" && storedRoleId[0].id === 1 ? <ViewUserAdminNew /> : <Login />}></Route>
+
+
             {/* ----------------- Approver ----------------------- */}
 
             <Route path='/UserKycDetails' element={roleId !== null && roleId !== undefined && roleId !== "" && storedRoleId[0].id === 3 ? <UserKycDetails /> : <Login />}></Route>

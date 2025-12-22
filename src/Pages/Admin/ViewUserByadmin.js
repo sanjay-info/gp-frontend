@@ -102,6 +102,11 @@ const ViewUserByadmin = () => {
 
     const [guardianAadhaarImg, setguardianAadhaarImg] = useState(null);
 
+    const [userTags, setUserTags] = useState([]);
+    const isLoaner = userTags?.includes("LOANER");
+    const [accountType, setAccountType] = useState("");
+
+
     const handleYesorNo = () => {
         setShowYesorNoAlert(false);
     };
@@ -397,6 +402,23 @@ const ViewUserByadmin = () => {
             else {
                 setguardianAadhaarImg(null);
             }
+            setAccountType(response.data.data.accountTypeName || "");
+
+
+            // ---------------- TAG LOGIC --------------------
+            let tagList = [];
+
+            const types = response.data.data.opportunityRecordTypes;
+            console.log(response.data, "xkbjncdksj")
+
+            if (!types || types.length === 0) {
+                tagList = ["Investor"]; // default tag
+            } else {
+                tagList = types.map(t => t.opportunityRecordType);
+            }
+
+            setUserTags(tagList);
+
         } catch (error) {
             console.log(error);
         }
@@ -457,10 +479,25 @@ const ViewUserByadmin = () => {
                     <div className="page_wrapper">
                         <div className='Summary_card'>
                             <div className='headerProfile row'>
-                                <div className='col-12 col-md-6 '>
+                                <div className='col-12 col-md-6' style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                    <span className="welcome_text">View User</span>
 
-                                    <text className="welcome_text">View User</text>
-
+                                    {userTags.map((t, index) => (
+                                        <span
+                                            key={index}
+                                            style={{
+                                                backgroundColor: "#e8f1ff",
+                                                padding: "3px 10px",
+                                                borderRadius: "12px",
+                                                fontSize: "11px",
+                                                fontWeight: "600",
+                                                border: "1px solid #bcd3ff",
+                                                color: "#0056d6"
+                                            }}
+                                        >
+                                            {t}
+                                        </span>
+                                    ))}
                                 </div>
                                 <div className='col-12 col-md-6 headercontainer'>
                                     <text className="customerid_head">Status : <span style={{ color: userActive ? 'green' : 'red' }}>{userActive ? 'Active' : 'In-Active'}</span> </text>
@@ -482,12 +519,12 @@ const ViewUserByadmin = () => {
                                             placeholder="First Name"
                                             maxLength={30}
                                             value={name}
-                                            readOnly
+                                            readOnly={!isLoaner}
                                         />
                                     </div>
                                 </div>
-                                {(userCategory != null && nriFlag === false) &&
-                                    <div className={ "col-lg-4 col-md-12"}>
+                                {!isLoaner && userCategory != null && nriFlag === false &&
+                                    <div className={"col-lg-4 col-md-12"}>
                                         <label className='login_label'>User Category<span className="required_star">*</span> </label>
                                         <div className='input_contanier'>
                                             <div className="input_icons">
@@ -495,8 +532,8 @@ const ViewUserByadmin = () => {
                                             </div>
                                             <input
                                                 type="text"
-                                                readOnly
-                                                disabled
+                                                readOnly={!isLoaner}
+                                                disabled={!isLoaner}
                                                 id="name"
                                                 name="name"
                                                 className='input_box'
@@ -533,11 +570,30 @@ const ViewUserByadmin = () => {
                                             className='input_box'
                                             placeholder="Email"
                                             value={email}
-                                            readOnly
-                                            disabled
+                                            readOnly={!isLoaner}
+                                            disabled={!isLoaner}
                                         />
                                     </div>
                                 </div>
+                                <div className={"col-lg-4 col-md-12"}>
+                                    <label className='login_label'>Account Type<span className="required_star">*</span> </label>
+                                    <div className='input_contanier'>
+                                        <div className="input_icons">
+                                            <FaRegUser />
+                                        </div>
+                                        <input
+                                            type="text"
+                                            id="name"
+                                            name="name"
+                                            className='input_box'
+                                            placeholder="First Name"
+                                            maxLength={30}
+                                            value={accountType}
+                                            readOnly
+                                        />
+                                    </div>
+                                </div>
+
                                 <div className="col-lg-4 col-md-12">
                                     <label className='login_label'>Mobile Number <span className="required_star">*</span>  </label>
                                     <div className='phone_input_container'>
@@ -546,7 +602,7 @@ const ViewUserByadmin = () => {
                                             value={countryCode + mobileNo}
                                             onlyCountries={['us', 'in']}
                                             style={{ width: "100%", height: "43px" }}
-                                            disabled
+                                            disabled={!isLoaner}
                                             disableDropdown={true}
                                         />
                                     </div>
@@ -561,8 +617,8 @@ const ViewUserByadmin = () => {
                                             type="date"
                                             id="dob"
                                             name="dob"
-                                            disabled
-                                            readOnly
+                                            disabled={!isLoaner}
+                                            readOnly={!isLoaner}
                                             className='input_box'
                                             onKeyDown={(event) => {
                                                 event.preventDefault();
@@ -574,8 +630,9 @@ const ViewUserByadmin = () => {
                                     </div>
                                 </div>
                                 <div className={"col-lg-4 col-md-12"}>
-                                    <label className='login_label'>PAN Number {nriFlag === false ? <span className="required_star">*</span> : <></>}  </label>
-                                    <div className='input_contanier'>
+                                    <label className="login_label">
+                                        PAN Number {!isLoaner && <span className="required_star">*</span>}
+                                    </label>                                    <div className='input_contanier'>
                                         <div className="input_icons">
                                             <FaRegAddressCard />
                                         </div>
@@ -585,17 +642,18 @@ const ViewUserByadmin = () => {
                                             name="pan"
                                             className='input_box'
                                             placeholder="PAN Number"
-                                            disabled
+                                            disabled={!isLoaner}
                                             value={maskedPanNo}
-                                            readOnly
+                                            readOnly={!isLoaner}
                                             maxLength={10}
                                             style={{ pointerEvents: kycver === true ? "none" : "auto" }}
                                         />
                                     </div>
                                 </div>
                                 <div className={"col-lg-4 col-md-12"}>
-                                    <label className='login_label'>Aadhaar Number {nriFlag === false ? <span className="required_star">*</span> : <></>}  </label>
-                                    <div className='input_contanier'>
+                                    <label className="login_label">
+                                        Aadhaar Number {!isLoaner && <span className="required_star">*</span>}
+                                    </label>                                    <div className='input_contanier'>
                                         <div className="input_icons">
                                             <FaRegAddressCard />
                                         </div>
@@ -606,8 +664,8 @@ const ViewUserByadmin = () => {
                                             className='input_box'
                                             placeholder="Aadhaar Number"
                                             maxLength={12}
-                                            disabled
-                                            readOnly
+                                            disabled={!isLoaner}
+                                            readOnly={!isLoaner}
                                             value={maskedAadhaarNo}
                                             style={{ pointerEvents: kycver === true ? "none" : "auto" }}
                                         />
@@ -624,11 +682,11 @@ const ViewUserByadmin = () => {
                                                 type="text"
                                                 id="pan"
                                                 name="pan"
-                                                disabled
+                                                disabled={!isLoaner}
                                                 className='input_box'
                                                 placeholder="Passport Number"
                                                 value={passportNo}
-                                                readOnly
+                                                readOnly={!isLoaner}
                                                 maxLength={10}
                                             />
                                         </div>
@@ -645,9 +703,9 @@ const ViewUserByadmin = () => {
                                                 id="countryOfResidence"
                                                 type="text"
                                                 className='input_box'
-                                                disabled
+                                                disabled={!isLoaner}
                                                 placeholder="Country of residence"
-                                                readOnly
+                                                readOnly={!isLoaner}
                                                 value={countryOfResidence}
                                             />
                                         </div>
@@ -664,7 +722,7 @@ const ViewUserByadmin = () => {
                                                 styles={customStyles}
                                                 placeholder="Select Nationality"
                                                 value={nationality}
-                                                disabled
+                                                disabled={!isLoaner}
                                                 isDisabled
                                             />
                                         </div>
@@ -683,8 +741,8 @@ const ViewUserByadmin = () => {
                                             className='inputsf'
                                             placeholder="Permanent Address"
                                             value={addressLine1}
-                                            disabled
-                                            readOnly
+                                            disabled={!isLoaner}
+                                            readOnly={!isLoaner}
                                         />
                                     </div>
                                     <div className='row'>
@@ -698,7 +756,7 @@ const ViewUserByadmin = () => {
                                                     className='inputsf'
                                                     placeholder="City"
                                                     value={city1}
-                                                    readOnly
+                                                    readOnly={!isLoaner}
                                                 />
                                             </div>
                                         </div>
@@ -711,9 +769,9 @@ const ViewUserByadmin = () => {
                                                     name="state1"
                                                     className='inputsf'
                                                     placeholder="State"
-                                                    disabled
+                                                    disabled={!isLoaner}
                                                     value={state1}
-                                                    readOnly
+                                                    readOnly={!isLoaner}
                                                 />
                                             </div>
                                         </div>
@@ -727,7 +785,7 @@ const ViewUserByadmin = () => {
                                                     options={countryOptions}
                                                     placeholder="Select Country"
                                                     value={country1}
-                                                    disabled
+                                                    disabled={!isLoaner}
                                                     isDisabled
                                                 />
                                             </div>
@@ -741,10 +799,10 @@ const ViewUserByadmin = () => {
                                                     name="pincode1"
                                                     className='inputsf'
                                                     placeholder="Postal Code"
-                                                    disabled
+                                                    disabled={!isLoaner}
                                                     value={pincode1}
                                                     maxLength={country1.value === "INDIA" ? 6 : 5}
-                                                    readOnly
+                                                    readOnly={!isLoaner}
 
                                                 />
 
@@ -754,10 +812,13 @@ const ViewUserByadmin = () => {
                                 </div>
                                 <div className="col-lg-6 col-md-12">
                                     <div style={{ display: "flex", justifyContent: "space-between", flexDirection: 'row' }}>
-                                        <label className='login_label'>Address for correspondence<span className="required_star">*</span>
+                                        <label className="login_label">
+                                            Address for correspondence
+                                            {!isLoaner && <span className="required_star">*</span>}
                                         </label>
+
                                         <div style={{ display: 'flex', justifyContent: "center", alignItems: "center", flexDirection: "row" }}>
-                                            <input type="checkbox" disabled id="agreeCheckbox" checked={sameAsCorrespondence} />
+                                            <input type="checkbox" disabled={!isLoaner} id="agreeCheckbox" checked={sameAsCorrespondence} />
                                             <label style={{ paddingLeft: "5px", fontWeight: "bold" }}> Same as Permanent Address
                                             </label>
                                         </div>
@@ -771,12 +832,12 @@ const ViewUserByadmin = () => {
                                             placeholder="Address for correspondence"
                                             disabled={sameAsCorrespondence}
                                             value={addressLine11}
-                                            readOnly
+                                            readOnly={!isLoaner}
                                         />
                                     </div>
                                     <div className='row'>
                                         <div className="col-lg-6 col-md-6">
-                                            <label className='login_label'>City <span className="required_star">*</span></label>
+                                            <label className='login_label'>City   {!isLoaner && <span className="required_star">*</span>}</label>
                                             <div className='input_contanier_address'>
                                                 <input
                                                     type="text"
@@ -786,12 +847,12 @@ const ViewUserByadmin = () => {
                                                     placeholder="City"
                                                     disabled={sameAsCorrespondence}
                                                     value={city2}
-                                                    readOnly
+                                                    readOnly={!isLoaner}
                                                 />
                                             </div>
                                         </div>
                                         <div className="col-lg-6 col-md-6">
-                                            <label className='login_label'>State <span className="required_star">*</span></label>
+                                            <label className='login_label'>State   {!isLoaner && <span className="required_star">*</span>}</label>
                                             <div className='input_contanier_address'>
                                                 <input
                                                     type="text"
@@ -800,7 +861,7 @@ const ViewUserByadmin = () => {
                                                     className='inputsf'
                                                     placeholder="State"
                                                     value={state2}
-                                                    readOnly
+                                                    readOnly={!isLoaner}
                                                     disabled={sameAsCorrespondence}
                                                 />
                                             </div>
@@ -808,7 +869,7 @@ const ViewUserByadmin = () => {
                                     </div>
                                     <div className='row'>
                                         <div className="col-lg-6 col-md-6">
-                                            <label className='login_label'>Country<span className="required_star">*</span></label>
+                                            <label className='login_label'>Country  {!isLoaner && <span className="required_star">*</span>}</label>
                                             <div className='input_contanier_address'>
                                                 <Select
                                                     styles={customStyles}
@@ -820,7 +881,7 @@ const ViewUserByadmin = () => {
                                             </div>
                                         </div>
                                         <div className="col-lg-6 col-md-6">
-                                            <label className='login_label'>Postal Code<span className="required_star">*</span></label>
+                                            <label className='login_label'>Postal Code  {!isLoaner && <span className="required_star">*</span>}</label>
                                             <div className='input_contanier_address'>
                                                 <input
                                                     type="tel"
@@ -829,7 +890,7 @@ const ViewUserByadmin = () => {
                                                     className='inputsf'
                                                     placeholder="Postal Code"
                                                     value={pincode2}
-                                                    readOnly
+                                                    readOnly={!isLoaner}
                                                     disabled={sameAsCorrespondence}
                                                     maxLength={country2.value === "INDIA" ? 6 : 5}
                                                 />
@@ -841,7 +902,10 @@ const ViewUserByadmin = () => {
                             <div className='row'>
                                 {nriFlag === false &&
                                     <div className="col-lg-4 col-md-12">
-                                        <label className='login_label'>Upload PAN <span className="required_star">*</span>   </label>
+                                        <label className="login_label">
+                                            Upload PAN
+                                            {!isLoaner && <span className="required_star">*</span>}
+                                        </label>
                                         <div className='input_contanier'>
                                             <input
                                                 type='file'
@@ -850,7 +914,7 @@ const ViewUserByadmin = () => {
                                                 className='input_box'
                                                 style={{ paddingLeft: "6px" }}
                                                 accept='.jpg,.png,.pdf'
-                                                disabled
+                                                disabled={!isLoaner}
                                             />
                                             <span style={{ fontSize: '10px' }}> (.png, .jpeg, .jpg or .pdf)</span>
                                             <div>
@@ -912,7 +976,7 @@ const ViewUserByadmin = () => {
                                 }
                                 {nriFlag === true &&
                                     <div className="col-lg-4 col-md-12">
-                                        <label className='login_label'>Upload Passport <span className="required_star">*</span>  </label>
+                                        <label className='login_label'>Upload Passport   {!isLoaner && <span className="required_star">*</span>}  </label>
                                         <div className='input_contanier'>
                                             <input
                                                 type='file'
@@ -921,7 +985,7 @@ const ViewUserByadmin = () => {
                                                 className='input_box'
                                                 style={{ paddingLeft: "6px" }}
                                                 accept='.jpg,.png,.pdf'
-                                                disabled
+                                                disabled={!isLoaner}
                                             />
                                             <span style={{ fontSize: '10px' }}> (.png, .jpeg, .jpg or .pdf)</span>
                                             <div>
@@ -982,7 +1046,7 @@ const ViewUserByadmin = () => {
                                     </div>
                                 }
                                 <div className="col-lg-4 col-md-12">
-                                    <label className='login_label'>Upload Address Proof <span style={{ fontSize: '10px' }}>  {nriFlag === true ? '( Utility Invoices /  Driver\'s License )' : '( Aadhaar / Driver\'s License )'}</span>   <span className="required_star">*</span>  </label>
+                                    <label className='login_label'>Upload Address Proof <span style={{ fontSize: '10px' }}>  {nriFlag === true ? '( Utility Invoices /  Driver\'s License )' : '( Aadhaar / Driver\'s License )'}</span>     {!isLoaner && <span className="required_star">*</span>} </label>
                                     <div className='input_contanier'>
                                         <input
                                             type='file'
@@ -991,7 +1055,7 @@ const ViewUserByadmin = () => {
                                             className='input_box'
                                             style={{ paddingLeft: "6px" }}
                                             accept='.jpg,.png,.pdf'
-                                            disabled
+                                            disabled={!isLoaner}
                                         />
                                         <span style={{ fontSize: '10px' }}> (.png, .jpeg, .jpg or .pdf)</span>
                                         <div>
@@ -1058,11 +1122,11 @@ const ViewUserByadmin = () => {
                                                 color: 'blue',
                                                 cursor: 'not-allowed'
                                             }}
-                                            readOnly
+                                            readOnly={!isLoaner}
                                         >
                                             Click Camera
                                         </span> */}
-                                        <span className="required_star">*</span> </label>
+                                        {!isLoaner && <span className="required_star">*</span>} </label>
                                     <div className='input_contanier'>
                                         <input
                                             type='file'
@@ -1071,7 +1135,7 @@ const ViewUserByadmin = () => {
                                             className='input_box'
                                             style={{ paddingLeft: "6px" }}
                                             accept='.jpg,.png,.pdf'
-                                            disabled
+                                            disabled={!isLoaner}
                                         />
                                         <span style={{ fontSize: '10px' }}> (.png, .jpeg, .jpg or .pdf)</span>
                                         <div>
@@ -1149,7 +1213,7 @@ const ViewUserByadmin = () => {
                                                     type="radio"
                                                     id="yes"
                                                     name="ociFlag"
-                                                    disabled
+                                                    disabled={!isLoaner}
                                                     checked={ociYesFlag === true}
                                                 />
                                                 <label>Yes</label>
@@ -1158,7 +1222,7 @@ const ViewUserByadmin = () => {
                                                     id="no"
                                                     name="ociFlag"
                                                     checked={ociYesFlag === false}
-                                                    disabled
+                                                    disabled={!isLoaner}
                                                 />
                                                 <label>No</label>
                                             </div>
@@ -1177,7 +1241,7 @@ const ViewUserByadmin = () => {
                                                 type="text"
                                                 className='input_box'
                                                 placeholder="OCI Number"
-                                                readOnly
+                                                readOnly={!isLoaner}
                                                 value={ociCardNo}
                                             />
                                         </div>
@@ -1194,7 +1258,7 @@ const ViewUserByadmin = () => {
                                                 className='input_box'
                                                 style={{ paddingLeft: "6px" }}
                                                 accept='.jpg,.png,.pdf'
-                                                disabled
+                                                disabled={!isLoaner}
                                             />
                                             <span style={{ fontSize: '10px' }}> (.png, .jpeg, .jpg or .pdf)</span>
                                             <div>
@@ -1280,8 +1344,8 @@ const ViewUserByadmin = () => {
                                                     placeholder="Enter Guardian Name"
                                                     maxLength={40}
                                                     value={guardianName}
-                                                    readOnly
-                                                    disabled
+                                                    readOnly={!isLoaner}
+                                                    disabled={!isLoaner}
                                                 />
                                             </div>
                                         </div>
@@ -1299,8 +1363,8 @@ const ViewUserByadmin = () => {
                                                     placeholder="Enter Guardian Name"
                                                     maxLength={40}
                                                     value={guardianDob}
-                                                    readOnly
-                                                    disabled
+                                                    readOnly={!isLoaner}
+                                                    disabled={!isLoaner}
                                                 />
                                             </div>
                                         </div>
@@ -1318,8 +1382,8 @@ const ViewUserByadmin = () => {
                                                     placeholder="Enter Guardian Relation"
                                                     maxLength={40}
                                                     value={guardianRelation}
-                                                    readOnly
-                                                    disabled
+                                                    readOnly={!isLoaner}
+                                                    disabled={!isLoaner}
                                                 />
                                             </div>
                                         </div>
@@ -1335,8 +1399,8 @@ const ViewUserByadmin = () => {
                                                     name="guardianPan"
                                                     className='input_box'
                                                     placeholder="Enter Guardian PAN Number"
-                                                    readOnly
-                                                    disabled
+                                                    readOnly={!isLoaner}
+                                                    disabled={!isLoaner}
                                                     maxLength={10}
                                                     value={guardianPan}
                                                 />
@@ -1355,8 +1419,8 @@ const ViewUserByadmin = () => {
                                                     className='input_box'
                                                     placeholder="Enter Guardian Aadhaar Number"
                                                     maxLength={12}
-                                                    readOnly
-                                                    disabled
+                                                    readOnly={!isLoaner}
+                                                    disabled={!isLoaner}
                                                     value={guardianAadhaar}
                                                 />
                                             </div>
@@ -1494,7 +1558,7 @@ const ViewUserByadmin = () => {
                             {/* <div className='login_label centered_check'>
                                 <input type="checkbox" id="iagree"
                                     checked={checkFlag}
-                                    disabled
+                                    disabled={!isLoaner}
                                 />
                                 <label style={{ paddingLeft: "5px" }}>I agree to the Terms and Conditions <span style={{ color: 'blue', cursor: "pointer" }} onClick={() => null}> (Click Here for T&C) <span className="required_star">*</span></span>
                                 </label>
