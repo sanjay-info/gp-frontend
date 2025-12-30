@@ -66,29 +66,46 @@ const LoanView = () => {
     const confirmMarkPaid = async () => {
         if (!selectedInstallment) return;
 
+        const payload = {
+            paymentDate: selectedInstallment.paymentDate,
+            transactionNumber: selectedInstallment.transactionNumber,
+            modeOfPayment: selectedInstallment.modeOfPayment,
+            notes: selectedInstallment.notes,
+        };
+
         try {
             setLoadingPay(true);
+
             await PostApi(
                 "POST",
                 `/user/installment/${selectedInstallment.scheduleId}/success`,
-                null,
+                payload, // ✅ derived from selectedInstallment
                 headers
             );
 
             setInstallments((prev) =>
                 prev.map((i) =>
                     i.scheduleId === selectedInstallment.scheduleId
-                        ? { ...i, paymentStatus: "SUCCESS" }
+                        ? {
+                            ...i,
+                            paymentStatus: "SUCCESS",
+                            actualPaymentDate: payload.paymentDate,
+                            transactionNumber: payload.transactionNumber,
+                            modeOfPayment: payload.modeOfPayment,
+                            notes: payload.notes,
+                        }
                         : i
                 )
             );
 
             setShowConfirmModal(false);
-        } catch {
+        } catch (error) {
+            console.error(error);
             alert("Payment update failed");
         } finally {
             setLoadingPay(false);
         }
+
     };
     const safeNum = (v) => v ?? 0;
     const safeText = (v) => (v ?? "—");
@@ -368,23 +385,46 @@ const LoanView = () => {
                                                 <th>Due Date</th>
                                                 <th>Principal</th>
                                                 <th>Interest</th>
+                                                <th>TDS</th>
+                                                <th>Interest After TDS</th>
                                                 <th>Total</th>
                                                 <th>Status</th>
                                                 <th>Action</th>
                                             </tr>
                                         </thead>
+
                                         <tbody>
                                             {sortedInstallments.map((emi) => (
                                                 <tr key={emi.scheduleId}>
                                                     <td>{emi.installmentNumber}</td>
                                                     <td>{emi.dueDate}</td>
+
                                                     <td>{formatCurrency(emi.principalComponent)}</td>
                                                     <td>{formatCurrency(emi.interestComponent)}</td>
+
+                                                    {/* Backend values */}
+                                                    <td>{formatCurrency(emi.tdsAmount)}</td>
+                                                    <td>{formatCurrency(emi.interestAfterTds)}</td>
+
                                                     <td>{formatCurrency(emi.totalDue)}</td>
-                                                    <td>{emi.paymentStatus}</td>
+
+                                                    <td>
+                                                        <span
+                                                            className={
+                                                                emi.paymentStatus === "SUCCESS"
+                                                                    ? "status-success"
+                                                                    : "status-pending"
+                                                            }
+                                                        >
+                                                            {emi.paymentStatus}
+                                                        </span>
+                                                    </td>
+
                                                     <td>
                                                         {emi.paymentStatus === "SUCCESS" ? (
-                                                            <button className="btn btn-sm btn-success" disabled>Paid</button>
+                                                            <button className="btn btn-sm btn-success" disabled>
+                                                                Paid
+                                                            </button>
                                                         ) : (
                                                             <button
                                                                 className="btn btn-sm btn-outline-primary"
@@ -399,6 +439,7 @@ const LoanView = () => {
                                         </tbody>
                                     </table>
                                 </div>
+
                             </div>
                         )}
 
@@ -424,16 +465,89 @@ const LoanView = () => {
 
             {/* ---------- CONFIRM MODAL ---------- */}
             {showConfirmModal && (
-                <div className="modal-backdrop">
-                    <div className="confirm-modal">
-                        <h4>Confirm Payment</h4>
-                        <p>
-                            Mark EMI <strong>{selectedInstallment?.installmentNumber}</strong> as PAID?
-                        </p>
+                <div className="payment-modal-backdrop">
+                    <div className="payment-modal">
+                        {/* Header */}
+                        <div className="payment-modal-header">
+                            <h3>Mark EMI as Paid</h3>
+                            <span className="emi-badge">
+                                EMI {selectedInstallment?.installmentNumber}
+                            </span>
+                        </div>
 
-                        <div className="modal-actions">
+                        {/* Body */}
+                        <div className="payment-modal-body">
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Payment Date *</label>
+                                    <input
+                                        type="date"
+                                        value={selectedInstallment?.paymentDate || ""}
+                                        onChange={(e) =>
+                                            setSelectedInstallment((prev) => ({
+                                                ...prev,
+                                                paymentDate: e.target.value,
+                                            }))
+                                        }
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Mode of Payment *</label>
+                                    <select
+                                        value={selectedInstallment?.modeOfPayment || ""}
+                                        onChange={(e) =>
+                                            setSelectedInstallment((prev) => ({
+                                                ...prev,
+                                                modeOfPayment: e.target.value,
+                                            }))
+                                        }
+                                    >
+                                        <option value="">Select</option>
+                                        <option value="NEFT">NEFT</option>
+                                        <option value="IMPS">IMPS</option>
+                                        <option value="UPI">UPI</option>
+                                        <option value="CASH">Cash</option>
+                                        <option value="CHEQUE">Cheque</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="form-group">
+                                <label>Transaction Reference</label>
+                                <input
+                                    type="text"
+                                    placeholder="Eg: NEFT-AXIS-XXXX"
+                                    value={selectedInstallment?.transactionNumber || ""}
+                                    onChange={(e) =>
+                                        setSelectedInstallment((prev) => ({
+                                            ...prev,
+                                            transactionNumber: e.target.value,
+                                        }))
+                                    }
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Notes</label>
+                                <textarea
+                                    rows="3"
+                                    placeholder="Optional notes"
+                                    value={selectedInstallment?.notes || ""}
+                                    onChange={(e) =>
+                                        setSelectedInstallment((prev) => ({
+                                            ...prev,
+                                            notes: e.target.value,
+                                        }))
+                                    }
+                                />
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="payment-modal-footer">
                             <button
-                                className="btn btn-secondary"
+                                className="btn-outline"
                                 onClick={() => setShowConfirmModal(false)}
                                 disabled={loadingPay}
                             >
@@ -441,16 +555,21 @@ const LoanView = () => {
                             </button>
 
                             <button
-                                className="btn btn-primary"
+                                className="btn-primary"
                                 onClick={confirmMarkPaid}
-                                disabled={loadingPay}
+                                disabled={
+                                    loadingPay ||
+                                    !selectedInstallment?.paymentDate ||
+                                    !selectedInstallment?.modeOfPayment
+                                }
                             >
-                                {loadingPay ? "Processing..." : "Confirm"}
+                                {loadingPay ? "Processing..." : "Confirm Payment"}
                             </button>
                         </div>
                     </div>
                 </div>
             )}
+
 
         </>
     );
