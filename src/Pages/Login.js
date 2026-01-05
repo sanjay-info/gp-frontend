@@ -145,105 +145,103 @@ const Login = () => {
     //     }
     // };
 
-    const handleLogin = (event) => {        //sanjay geolocation login 06-11-2025
+    const handleLogin = (event) => {
         event.preventDefault();
 
+        // Validate form before login
         if (!validateForm()) return;
 
+        /* ======================================================
+           LOCATION + IP BASED LOGIN (DISABLED)
+           Reason: Not required for current implementation
+           ====================================================== */
 
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const latitude = position.coords.latitude;
-                const longitude = position.coords.longitude;
+        // navigator.geolocation.getCurrentPosition(
+        //     (position) => {
+        //         const latitude = position.coords.latitude;
+        //         const longitude = position.coords.longitude;
 
-                // Step 2: Get public IP
-                fetch("https://api.ipify.org?format=json")
-                    .then(res => res.json())
-                    .then(data => {
-                        const ipAddress = data.ip;
+        //         fetch("https://api.ipify.org?format=json")
+        //             .then(res => res.json())
+        //             .then(data => {
+        //                 const ipAddress = data.ip;
+        //                 loginUser(latitude, longitude, ipAddress);
+        //             })
+        //             .catch(err => {
+        //                 console.warn("Unable to get IP address:", err);
+        //                 loginUser(latitude, longitude, "");
+        //             });
+        //     },
+        //     (error) => {
+        //         alert("Please enable location access to continue with login.");
+        //     }
+        // );
+
+        /* ======================================================
+           NORMAL LOGIN (WITHOUT LOCATION)
+           ====================================================== */
+
+        loginUser();
+    };
 
 
-                        // Step 2: Now call Login API
-                        // loginUser();
-                        loginUser(latitude, longitude, ipAddress);
-                    })
-                    .catch(err => {
-                        console.warn("Unable to get IP address:", err);
-                        loginUser(latitude, longitude, ""); // fallback without IP
-                    });
-            },
-            (error) => {
-                alert("Please enable location access to continue with login.");
-            }
-        );
+    /* ======================================================
+       LOGIN API FUNCTION (LOCATION REMOVED)
+       ====================================================== */
+    const loginUser = () => {
+        const url = "/user/login";
 
-
-        const loginUser = (latitude, longitude, ipAddress) => {                   //sanjay geolocation login 06-11-2025
-            const url = "/user/login";
-            const data = {
-                userName: email,
-                password: password,
-                latitude: latitude.toString(),
-                longitude: longitude.toString(),
-                ipAddress: ipAddress
-            };
-
-            PostApi('POST', url, data)
-                .then((response) => {
-                    if (response.data.status === 200) {
-                        localStorage.setItem('user_id', response.data.data.id);
-                        const jsonString = JSON.stringify(response.data.data.role);
-                        localStorage.setItem('Role_id', jsonString);
-                        localStorage.setItem('Firstlogin', response.data.data.firstLogin);
-                        localStorage.setItem('kycverified', response.data.data.kycVerified)
-                        localStorage.setItem('UserName', response.data.data.firstName)
-                        localStorage.setItem('token', response.data.token);
-
-                        if (response.data.data.firstLogin === true) {
-                            toast.success('Please Change Your Password');
-                            navigate('/changePassword');
-                        } else {
-                            if (response.data.data.role[0].id === 1) {
-                                toast.success('Login Successful');
-                                navigate('/Investors');
-                            }
-                            if (response.data.data.role[0].id === 2) {
-                                if (response.data.data.kycVerified === true) {
-                                    navigate('/Homepage');
-                                    toast.success('Login Successful');
-                                } else {
-                                    navigate('/Myprofilekyc');
-                                    toast.success('Login Successful');
-                                }
-                                localStorage.setItem('UserType', response.data.data.userType.id)
-                            }
-                            if (response.data.data.role[0].id === 3) {
-                                toast.success('Login Successful');
-                                navigate('/ApproverReport');
-                                localStorage.setItem('UserType', response.data.data.userType.id)
-                            }
-                            if (response.data.data.role[0].id === 4) {
-                                toast.success('Login Successful');
-                                navigate('/FinanceReport');
-                                localStorage.setItem('UserType', response.data.data.userType.id)
-                            }
-                            if (response.data.data.role[0].id === 6) {
-                                toast.success('Login Successful');
-                                navigate('/DividendDeclaration');
-                                localStorage.setItem('UserType', response.data.data.userType.id)
-                            }
-                        }
-                    } else if (response.data.status === 409) {
-                        setAlertMessage(response.data.message);
-                        setShowAlert(true);
-                    }
-                })
-                .catch((error) => {
-                    console.log(error)
-                });
+        const data = {
+            userName: email,
+            password: password,
+            latitude: "",
+            longitude: "",
+            ipAddress: ""
         };
 
-    }
+        PostApi('POST', url, data)
+            .then((response) => {
+                if (response.data.status === 200) {
+
+                    localStorage.setItem('user_id', response.data.data.id);
+                    localStorage.setItem('Role_id', JSON.stringify(response.data.data.role));
+                    localStorage.setItem('Firstlogin', response.data.data.firstLogin);
+                    localStorage.setItem('kycverified', response.data.data.kycVerified);
+                    localStorage.setItem('UserName', response.data.data.firstName);
+                    localStorage.setItem('token', response.data.token);
+
+                    if (response.data.data.firstLogin === true) {
+                        toast.success('Please Change Your Password');
+                        navigate('/changePassword');
+                    } else {
+                        const roleId = response.data.data.role[0].id;
+
+                        if (roleId === 1) navigate('/Investors');
+                        if (roleId === 2) {
+                            navigate(
+                                response.data.data.kycVerified
+                                    ? '/Homepage'
+                                    : '/Myprofilekyc'
+                            );
+                            localStorage.setItem('UserType', response.data.data.userType.id);
+                        }
+                        if (roleId === 3) navigate('/ApproverReport');
+                        if (roleId === 4) navigate('/FinanceReport');
+                        if (roleId === 6) navigate('/DividendDeclaration');
+
+                        toast.success('Login Successful');
+                    }
+                }
+                else if (response.data.status === 409) {
+                    setAlertMessage(response.data.message);
+                    setShowAlert(true);
+                }
+            })
+            .catch((error) => {
+                console.error("Login API error:", error);
+            });
+    };
+
 
 
     return (

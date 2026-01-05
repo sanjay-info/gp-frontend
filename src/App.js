@@ -74,6 +74,7 @@ import LoanApplications from './Pages/Admin/LoanApplication';
 import IntentView from './Pages/Admin/Intentview';
 import LoanApplicationView from './Pages/Admin/LoanApplicationView';
 import ViewUserAdminNew from './Pages/Admin/ViewloanesbyAdmin';
+import LoanPayout from './Pages/FINANCE/Loanpayout';
 
 const simplifiedConfig = {
   ondevtoolopen: (type, next) => {
@@ -248,6 +249,7 @@ function App() {
             <Route path='/FormList' element={roleId !== null && roleId !== undefined && roleId !== "" && (storedRoleId[0].id === 4 || storedRoleId[0].id === 6) ? <FormList /> : <Login />} />
             <Route path='/UnitAllowcation' element={roleId !== null && roleId !== undefined && roleId !== "" && (storedRoleId[0].id === 4 || storedRoleId[0].id === 6) ? <UnitAllowcation /> : <Login />} />
             <Route path='/DividendYear' element={roleId !== null && roleId !== undefined && roleId !== "" && (storedRoleId[0].id === 4 || storedRoleId[0].id === 6) ? <DividendYear /> : <Login />} />
+            <Route path='/LoanPayout' element={roleId !== null && roleId !== undefined && roleId !== "" && (storedRoleId[0].id === 4 || storedRoleId[0].id === 6) ? <LoanPayout /> : <Login />} />
 
 
             {/* ----------------- Secretariat ----------------------- */}

@@ -445,6 +445,19 @@ const SidePanel = () => {
               >
                 Conversion Rate
               </MenuItem>
+              <MenuItem
+                onClick={() => navigate("/LoanPayout")}
+                icon={<FaHandHoldingDollar id="LoanPayout" />}
+                className={
+                  location.pathname === "/LoanPayout" ||
+                    location.pathname === "/LoanPayoutView"
+                    ? "active"
+                    : ""
+                }
+              >
+                Loan Payout
+              </MenuItem>
+
 
               <MenuItem
                 onClick={() => navigate("/OtpDetails")}

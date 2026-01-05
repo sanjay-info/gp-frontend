@@ -1,0 +1,168 @@
+/* =========================
+   ROOT SCOPE
+========================= */
+.loan-payout-page {
+    background: #f8fafc;
+}
+
+/* =========================
+   HEADER
+========================= */
+.loan-payout-page .loan-header {
+    margin-bottom: 20px;
+}
+
+.loan-payout-page .loan-header h2 {
+    font-size: 22px;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0;
+}
+
+.loan-payout-page .loan-header p {
+    font-size: 14px;
+    color: #64748b;
+    margin-top: 4px;
+}
+
+/* =========================
+   FILTER CARD
+========================= */
+.loan-payout-page .loan-filter-card {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    margin-top: 16px;
+}
+
+.loan-payout-page .loan-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+.loan-payout-page .filter-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.loan-payout-page .filter-field label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #475569;
+    margin-bottom: 6px;
+}
+
+.loan-payout-page .filter-input {
+    height: 40px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    padding: 0 12px;
+    font-size: 14px;
+}
+
+.loan-payout-page .filter-input:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+
+/* react-select scoped */
+.loan-payout-page .react-select__control {
+    min-height: 40px;
+    border-radius: 8px !important;
+    border-color: #e2e8f0 !important;
+}
+
+/* =========================
+   TABLE (MaterialTable)
+========================= */
+.loan-payout-page .MuiPaper-root {
+    border-radius: 14px !important;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06) !important;
+}
+
+/* =========================
+   ACTION BUTTON
+========================= */
+.loan-payout-page .declare_btn {
+    margin-top: 20px;
+    padding: 12px 22px;
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.loan-payout-page .declare_btn:hover {
+    opacity: 0.9;
+}
+
+/* =========================
+   MODAL
+========================= */
+.loan-payout-page .modal-content {
+    border-radius: 16px;
+    border: none;
+}
+
+.loan-payout-page .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 22px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.loan-payout-page .modal-header span {
+    font-size: 18px;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.loan-payout-page .modal-body {
+    padding: 22px;
+}
+
+.loan-payout-page .input_box {
+    width: 100%;
+    height: 42px;
+    margin-bottom: 14px;
+    padding: 0 12px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    font-size: 14px;
+}
+
+.loan-payout-page .input_box:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+
+.loan-payout-page .modal-footer {
+    padding: 16px 22px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.loan-payout-page .modal-footer button {
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+}
+
+.loan-payout-page .modal-footer button:first-child {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.loan-payout-page .modal-footer button:last-child {
+    background: #4f46e5;
+    color: #fff;
+}

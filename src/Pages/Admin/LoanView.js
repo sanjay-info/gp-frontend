@@ -24,6 +24,8 @@ const LoanView = () => {
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [selectedInstallment, setSelectedInstallment] = useState(null);
     const [loadingPay, setLoadingPay] = useState(false);
+    const [disbursements, setDisbursements] = useState([]);
+
 
     const token = localStorage.getItem("token");
     const headers = { Authorization: `Bearer ${token}` };
@@ -42,6 +44,8 @@ const LoanView = () => {
                 );
                 setData(res?.data?.loan);
                 setInstallments(res?.data?.installments || []);
+                setDisbursements(res?.data?.disbursements || []);
+
             } catch (err) {
                 console.error(err);
             }
@@ -148,7 +152,7 @@ const LoanView = () => {
 
                         {/* ---------- TABS ---------- */}
                         <div className="LV_tabs">
-                            {["summary", "loaner", "repayment", "intent"].map((tab) => (
+                            {["summary", "loaner", "repayment", "disbursement", "intent"].map((tab) => (
                                 <div
                                     key={tab}
                                     className={`LV_tab ${activeTab === tab ? "active" : ""}`}
@@ -442,6 +446,48 @@ const LoanView = () => {
 
                             </div>
                         )}
+
+                        {/* ================= DISBURSEMENT ================= */}
+                        {activeTab === "disbursement" && (
+                            <div className="LV_tab_content">
+                                <div className="LV_card">
+                                    <h4>Disbursement Details</h4>
+
+                                    {disbursements.length === 0 ? (
+                                        <p style={{ color: "#6b7280" }}>No disbursements available</p>
+                                    ) : (
+                                        <table className="LV_table">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Date</th>
+                                                    <th>Amount</th>
+                                                    <th>UTR / Ref</th>
+                                                    <th>Lender</th>
+                                                    <th>Bank</th>
+                                                    <th>Remarks</th>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody>
+                                                {disbursements.map((d, idx) => (
+                                                    <tr key={d.disbursementId}>
+                                                        <td>{idx + 1}</td>
+                                                        <td>{formatDate(d.disbursementDate)}</td>
+                                                        <td>{formatCurrency(d.disbursementAmount)}</td>
+                                                        <td>{d.utrNumber || "—"}</td>
+                                                        <td>{d.lenderName || "—"}</td>
+                                                        <td>{d.lenderBankName || "—"}</td>
+                                                        <td>{d.remarks || "—"}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
 
                         {/* ================= INTENT ================= */}
                         {activeTab === "intent" && (
