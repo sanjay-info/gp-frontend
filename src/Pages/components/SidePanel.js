@@ -17,6 +17,12 @@ import { GiDeliveryDrone } from "react-icons/gi";
 import { AiOutlineYoutube } from "react-icons/ai";
 import { FaHandHoldingDollar } from "react-icons/fa6";
 import { gp_logo } from "./imageUrl";
+import {
+  PiClockLight,
+  PiCheckCircleLight,
+  PiXCircleLight,
+} from "react-icons/pi";
+
 
 const SidePanel = () => {
   const {
@@ -380,106 +386,129 @@ const SidePanel = () => {
           )}
 
           {/* ------------------- FINANCE ADMIN (Role 4) -------------------- */}
+          {/* ------------------- FINANCE ADMIN (Role 4) -------------------- */}
           {item.id === 4 && (
             <Menu iconShape="square" className="ClsMenu">
-              <MenuItem
-                onClick={() => navigate("/PaymentApprove")}
-                icon={<FaUser id="financeadmin" />}
-                className={
-                  location.pathname === "/PaymentApprove" ||
-                    location.pathname === "/ChckFinancepayment"
-                    ? "active"
-                    : ""
+
+              {/* INVESTORS */}
+              <SubMenu
+                label="Investors"
+                icon={<FaUser />}
+                defaultOpen={
+                  pathname.includes("/PaymentApprove") ||
+                  pathname.includes("/ConversionRate") ||
+                  pathname.includes("/Dividend") ||
+                  pathname.includes("/DividendYear")
                 }
               >
-                User Payment Details
-              </MenuItem>
+                <MenuItem
+                  onClick={() => navigate("/PaymentApprove")}
+                  className={pathname === "/PaymentApprove" ? "active" : ""}
+                >
+                  User Payment Details
+                </MenuItem>
 
-              <MenuItem
-                onClick={() => navigate("/UnitAllowcation")}
-                icon={<LuAlignEndHorizontal id="UnitAllowcation" />}
-                className={
-                  location.pathname === "/UnitAllowcation" ||
-                    location.pathname === "/FormList" ||
-                    location.pathname === "/ApplicationForm"
-                    ? "active"
-                    : ""
+                <MenuItem
+                  onClick={() => navigate("/ConversionRate")}
+                  className={pathname === "/ConversionRate" ? "active" : ""}
+                >
+                  Conversion Rate
+                </MenuItem>
+
+                <MenuItem
+                  onClick={() => navigate("/Dividend")}
+                  className={
+                    pathname === "/Dividend" ||
+                      pathname === "/DividendMaster"
+                      ? "active"
+                      : ""
+                  }
+                >
+                  Dividend
+                </MenuItem>
+
+                <MenuItem
+                  onClick={() => navigate("/DividendYear")}
+                  className={pathname === "/DividendYear" ? "active" : ""}
+                >
+                  Dividend Year Calculation
+                </MenuItem>
+              </SubMenu>
+
+              {/* LOANS */}
+              {/* LOANS */}
+              <SubMenu
+                label="Loans"
+                icon={<FaHandHoldingDollar />}
+                defaultOpen={
+                  pathname.includes("/LoanPayout") ||
+                  pathname.includes("/LoanPayoutView") ||
+                  pathname.includes("/Document")
                 }
               >
-                Allotment
-              </MenuItem>
+                {/* Loan */}
+                <MenuItem
+                  onClick={() => navigate("/LoanPayout")}
+                  className={
+                    pathname === "/LoanPayout" ||
+                      pathname.includes("/LoanPayoutView")
+                      ? "active"
+                      : ""
+                  }
+                >
+                  Loan Payout
+                </MenuItem>
+                <MenuItem
+                  onClick={() => navigate("/Payments")}
+                  className={
+                    pathname === "/Payments" ||
+                      pathname.includes("/Payments")
+                      ? "active"
+                      : ""
+                  }
+                >
+                  Payments
+                </MenuItem>
 
-              <MenuItem
-                onClick={() => navigate("/Dividend")}
-                icon={<BsDatabase id="Dividend" />}
-                className={
-                  location.pathname === "/Dividend" ||
-                    location.pathname === "/DividendMaster"
-                    ? "active"
-                    : ""
-                }
-              >
-                Dividend
-              </MenuItem>
+                {/* Documents directly under Loans */}
+                <MenuItem
+                  onClick={() => navigate("/DocumentMasters")}
+                  className={pathname === "/DocumentMasters" ? "active" : ""}
+                >
+                  Document Masters
+                </MenuItem>
 
-              <MenuItem
-                onClick={() => navigate("/DividendYear")}
-                icon={<LuCalculator id="DividendYear" />}
-                className={
-                  location.pathname === "/DividendYear"
-                    ? "active"
-                    : ""
-                }
-              >
-                Dividend Year Calculation
-              </MenuItem>
+                <MenuItem
+                  onClick={() => navigate("/DocumentTemplates")}
+                  className={pathname === "/DocumentTemplates" ? "active" : ""}
+                >
+                  Document Templates
+                </MenuItem>
 
-              <MenuItem
-                onClick={() => navigate("/ConversionRate")}
-                icon={<TbNavigationDollar id="ConversionRate" />}
-                className={
-                  location.pathname === "/ConversionRate"
-                    ? "active"
-                    : ""
-                }
-              >
-                Conversion Rate
-              </MenuItem>
-              <MenuItem
-                onClick={() => navigate("/LoanPayout")}
-                icon={<FaHandHoldingDollar id="LoanPayout" />}
-                className={
-                  location.pathname === "/LoanPayout" ||
-                    location.pathname === "/LoanPayoutView"
-                    ? "active"
-                    : ""
-                }
-              >
-                Loan Payout
-              </MenuItem>
+                <MenuItem
+                  onClick={() => navigate("/Documents")}
+                  className={pathname === "/Documents" ? "active" : ""}
+                >
+                  Documents
+                </MenuItem>
+              </SubMenu>
 
 
-              <MenuItem
-                onClick={() => navigate("/OtpDetails")}
-                icon={<PiPasswordFill id="OtpDetails" />}
-                className={
-                  location.pathname === "/OtpDetails" ? "active" : ""
-                }
-              >
-                NRI Otp Details
-              </MenuItem>
+              {/* DOCUMENTS */}
 
+
+              {/* REPORT */}
               <MenuItem
+                icon={<TbReport />}
                 onClick={() => navigate("/FinanceReport")}
-                icon={<TbReport id="FinanceReport" />}
-                className={
-                  location.pathname === "/FinanceReport" ? "active" : ""
-                }
+                className={pathname === "/FinanceReport" ? "active" : ""}
               >
                 Report
               </MenuItem>
+
             </Menu>
           )}
+
 
           {/* ------------------- AGENT (Role 5) -------------------- */}
           {item.id === 5 && (
@@ -547,6 +576,62 @@ const SidePanel = () => {
               >
                 Scheme Master
               </MenuItem>
+            </Menu>
+          )}
+          {/* ------------------- GM FINANCE (Role 7) -------------------- */}
+          {item.id === 7 && (
+            <Menu iconShape="square" className="ClsMenu">
+
+              <SubMenu
+                label="Loan Approvals"
+                icon={<FaHandHoldingDollar />}
+                defaultOpen={pathname.includes("/LoanApprovals")}
+              >
+
+                {/* PENDING */}
+                <MenuItem
+                  icon={<PiClockLight />}
+                  className={
+                    pathname === "/LoanApprovals/pending" ? "active" : ""
+                  }
+                  onClick={() => {
+                    navigate("/LoanApprovals/pending");
+                    handleBackdropClick();
+                  }}
+                >
+                  Pending
+                </MenuItem>
+
+                {/* APPROVED */}
+                <MenuItem
+                  icon={<PiCheckCircleLight />}
+                  className={
+                    pathname === "/LoanApprovals/approved" ? "active" : ""
+                  }
+                  onClick={() => {
+                    navigate("/LoanApprovals/approved");
+                    handleBackdropClick();
+                  }}
+                >
+                  Approved
+                </MenuItem>
+
+                {/* REJECTED */}
+                <MenuItem
+                  icon={<PiXCircleLight />}
+                  className={
+                    pathname === "/LoanApprovals/rejected" ? "active" : ""
+                  }
+                  onClick={() => {
+                    navigate("/LoanApprovals/rejected");
+                    handleBackdropClick();
+                  }}
+                >
+                  Rejected
+                </MenuItem>
+
+              </SubMenu>
+
             </Menu>
           )}
 

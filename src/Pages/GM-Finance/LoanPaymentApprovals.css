@@ -1,0 +1,184 @@
+/* ===== PAGE ===== */
+.LPA_page {
+    background: #f6f7fb;
+}
+
+/* ===== CARD ===== */
+.LPA_card {
+    padding: 20px;
+    border-radius: 14px;
+}
+
+/* ===== HEADER ===== */
+.LPA_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.LPA_header h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.LPA_subtext {
+    margin-top: 4px;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+/* ===== STATUS CHIP ===== */
+.LPA_status_chip {
+    font-weight: 500;
+    border-radius: 8px;
+}
+
+.LPA_status_chip.inreview {
+    background-color: #fff7ed !important;
+    color: #c2410c !important;
+}
+
+.LPA_status_chip.approved {
+    background-color: #ecfdf5 !important;
+    color: #047857 !important;
+}
+
+.LPA_status_chip.rejected {
+    background-color: #fef2f2 !important;
+    color: #b91c1c !important;
+}
+
+/* ===== MATERIAL TABLE TWEAKS ===== */
+.MuiTableCell-head {
+    background-color: #fafafa !important;
+    font-weight: 600 !important;
+}
+
+.MuiTableRow-root:hover {
+    background-color: #f9fafb !important;
+}
+
+/* FORCE HEADER VISIBILITY */
+/* ================= FORCE MATERIAL TABLE HEADER ================= */
+
+/* Header row */
+.MuiTableHead-root {
+    background-color: #0f172a !important;
+}
+
+/* Header cells */
+.MuiTableCell-head {
+    background-color: #274568 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    border-bottom: 1px solid #1e293b !important;
+}
+
+/* Header text (MaterialTable wrapper) */
+.MuiTableSortLabel-root {
+    color: #ffffff !important;
+}
+
+.MuiTableSortLabel-root.Mui-active {
+    color: #ffffff !important;
+}
+
+.MuiTableSortLabel-icon {
+    color: #cbd5e1 !important;
+}
+
+/* Remove any transparency */
+.MuiTableCell-head * {
+    opacity: 1 !important;
+}
+
+
+/* ===== ACTION COLUMN ===== */
+.LPA_action_wrap {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.LPA_action_icon {
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.15s ease, color 0.15s ease;
+    border: none !important;
+
+}
+
+.LPA_action_icon:hover {
+    transform: scale(1.1);
+}
+
+/* APPROVE */
+.LPA_action_icon.approve {
+    color: #16a34a;
+}
+
+/* REJECT */
+.LPA_action_icon.reject {
+    color: #dc2626;
+}
+
+/* VIEW */
+.LPA_action_icon.view {
+    color: #2563eb;
+}
+
+/* MORE */
+.LPA_action_icon.more {
+    color: #6b7280;
+}
+
+/* DISABLED */
+.LPA_action_icon.disabled {
+    color: #cbd5e1;
+    cursor: not-allowed;
+}
+
+/* ACTION WRAP */
+.LPA_action_wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* BASE ICON */
+.LPA_action_icon {
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.LPA_action_icon:hover {
+    transform: scale(1.1);
+}
+
+/* MORE */
+.LPA_action_icon.more {
+    color: #6b7280;
+}
+
+/* MARK AS PAID */
+.LPA_action_icon.markpaid {
+    color: #0ea5e9;
+    animation: fadeIn 0.2s ease-in;
+}
+
+/* FADE ANIMATION */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}

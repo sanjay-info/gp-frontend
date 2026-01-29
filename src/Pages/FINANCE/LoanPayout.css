@@ -166,3 +166,211 @@
     background: #4f46e5;
     color: #fff;
 }
+
+/* Container: Floating Card Effect */
+.emi-expand-panel.modern {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04);
+    margin: 10px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Row Layouts */
+.emi-row-main {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr;
+    /* Transaction No gets more space */
+    gap: 16px;
+}
+
+.emi-row-notes {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border-top: 1px dashed #e2e8f0;
+    padding-top: 16px;
+}
+
+/* Control Group (Label + Input) */
+.emi-control {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Label Styling: Small, Bold, Muted */
+.emi-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding-left: 2px;
+}
+
+/* Input, Select, Textarea Shared Styles */
+.emi-control input,
+.emi-control select,
+.emi-row-notes textarea,
+.react-datepicker-wrapper input {
+    all: unset;
+    /* Reset browser defaults */
+    box-sizing: border-box;
+    width: 100%;
+    padding: 10px 12px;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1e293b;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Custom Select Arrow */
+.emi-control select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 14px;
+    padding-right: 32px;
+}
+
+/* Interactive States */
+.emi-control input:hover,
+.emi-control select:hover,
+.emi-row-notes textarea:hover {
+    border-color: #cbd5e1;
+}
+
+.emi-control input:focus,
+.emi-control select:focus,
+.emi-row-notes textarea:focus,
+.react-datepicker-wrapper input:focus {
+    background-color: #ffffff;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Placeholder Styling */
+::placeholder {
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+/* Textarea Specifics */
+.emi-row-notes textarea {
+    min-height: 40px;
+    resize: none;
+    line-height: 1.5;
+}
+
+/* DatePicker Wrapper Fix */
+.react-datepicker-wrapper {
+    width: 100%;
+}
+
+.confirmModal .modal-content {
+    border-radius: 12px;
+    border: none;
+    padding: 0;
+}
+
+.confirmModalContainer {
+    padding: 20px 24px;
+    font-family: Inter, sans-serif;
+}
+
+.confirmHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 16px;
+    font-weight: 600;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 12px;
+}
+
+.confirmHeader svg {
+    cursor: pointer;
+    color: #6b7280;
+}
+
+.confirmBody {
+    padding: 18px 0;
+    text-align: center;
+}
+
+.confirmTitle {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.confirmDesc {
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.5;
+}
+
+.confirmFooter {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 12px;
+}
+
+.btnCancel {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    background: #fff;
+    color: #374151;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.btnCancel:hover {
+    background: #f9fafb;
+}
+
+.btnConfirm {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    background: #2563eb;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.btnConfirm:hover {
+    background: #1e40af;
+}
+
+.actionBtn {
+    padding: 6px 12px;
+    font-size: 13px;
+    border-radius: 6px;
+    border: 1px solid #2563eb;
+    background: #fff;
+    color: #2563eb;
+    cursor: pointer;
+}
+
+.actionBtn:hover {
+    background: #2563eb;
+    color: #fff;
+}
+
+/* Responsive: Stack on small screens */
+@media (max-width: 640px) {
+    .emi-row-main {
+        grid-template-columns: 1fr;
+    }
+}

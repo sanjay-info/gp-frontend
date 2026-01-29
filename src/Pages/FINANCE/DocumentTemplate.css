@@ -1,0 +1,261 @@
+/* ===============================
+   Document Template – Modern UI
+   =============================== */
+
+.document-template-page {
+    background: #f8fafc;
+    min-height: 100vh;
+}
+
+/* Card */
+.document-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px 24px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+}
+
+/* Header */
+.document-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.document-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.sub-text {
+    margin-top: 4px;
+    font-size: 13px;
+    color: #6b7280;
+}
+
+/* Primary Action Button */
+.primary-btn {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+    border: none;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.primary-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+}
+
+/* -------- Material Table tweaks -------- */
+
+.MuiTableCell-head {
+    font-weight: 600 !important;
+    color: #374151 !important;
+}
+
+.MuiTableRow-root:hover {
+    background-color: #f9fafb !important;
+}
+
+/* Chips (flags) */
+.MuiChip-root {
+    font-size: 11px !important;
+    height: 22px !important;
+    border-radius: 6px !important;
+}
+
+/* -------- Dialog -------- */
+
+/* ===============================
+   MODAL / DIALOG – MODERN STYLE
+   =============================== */
+
+/* Dialog container */
+.MuiDialog-paper {
+    border-radius: 16px !important;
+    padding: 6px 0 !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Dialog title */
+.MuiDialogTitle-root {
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    color: #0f172a !important;
+    padding: 20px 24px !important;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* Dialog content */
+.MuiDialogContent-root {
+    padding: 20px 24px !important;
+}
+
+/* Dialog actions (footer) */
+.MuiDialogActions-root {
+    padding: 16px 24px !important;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* ===============================
+   FORM ELEMENTS INSIDE MODAL
+   =============================== */
+
+/* TextField */
+.MuiTextField-root {
+    margin-top: 14px !important;
+}
+
+/* Input focus */
+.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+    border-color: #2563eb !important;
+}
+
+/* Checkbox spacing */
+.MuiFormControlLabel-root {
+    margin-right: 24px !important;
+    margin-top: 6px;
+}
+
+/* ===============================
+   MODAL BUTTONS
+   =============================== */
+
+/* Cancel button */
+.MuiDialogActions-root .MuiButton-text {
+    color: #475569 !important;
+    font-weight: 500 !important;
+    text-transform: none !important;
+}
+
+/* Primary button */
+.MuiDialogActions-root .MuiButton-contained {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+    color: #ffffff !important;
+    font-weight: 500 !important;
+    text-transform: none !important;
+    padding: 8px 20px !important;
+    border-radius: 8px !important;
+}
+
+/* Primary hover */
+.MuiDialogActions-root .MuiButton-contained:hover {
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.35) !important;
+}
+
+/* Disabled save */
+.MuiButton-contained.Mui-disabled {
+    background: #cbd5f5 !important;
+    color: #ffffff !important;
+}
+
+/* ===== FIX: TABLE HEADER TEXT VISIBILITY ===== */
+
+.MuiTableHead-root {
+    background-color: #243e5c !important;
+    /* keep your blue */
+}
+
+.MuiTableCell-head {
+    color: #ffffff !important;
+    /* MAKE TEXT VISIBLE */
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    text-transform: none !important;
+}
+
+/* Optional: text alignment */
+.MuiTableCell-head:first-child {
+    padding-left: 16px !important;
+}
+
+/* ================================
+   DOCUMENT DETAILS MODAL STYLES
+   ================================ */
+
+.details-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 6px;
+}
+
+/* Each row */
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed #e5e7eb;
+}
+
+/* Label */
+.detail-row span {
+    font-size: 13px;
+    color: #6b7280;
+    white-space: nowrap;
+}
+
+/* Value */
+.detail-row strong {
+    font-size: 14px;
+    font-weight: 500;
+    color: #111827;
+    text-align: right;
+    max-width: 60%;
+    word-break: break-word;
+}
+
+/* Chips spacing */
+.details-grid .MuiChip-root {
+    background-color: #f1f5f9;
+    font-size: 11px;
+    font-weight: 500;
+    color: #0f172a;
+}
+
+/* Modal title tweak (optional) */
+.MuiDialogTitle-root {
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    color: #0f172a !important;
+}
+
+/* Close button */
+.MuiDialogActions-root .MuiButton-text {
+    color: #2563eb !important;
+    font-weight: 500 !important;
+}
+
+/* ===== DOCUMENT LIST INSIDE TEMPLATE DETAILS ===== */
+
+.doc-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    background: #f9fafb;
+}
+
+.doc-sub {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 4px;
+}
+
+.doc-right span {
+    font-size: 12px;
+    color: #374151;
+}

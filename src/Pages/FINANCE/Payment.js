@@ -8,6 +8,8 @@ import TableOptions from "../components/TableOptions";
 import { useLocation } from "react-router-dom";
 import Modal from "react-bootstrap/Modal";
 import { AiOutlineClose } from "react-icons/ai";
+import Alert from "../components/Alert";
+import "./Payment.css"
 
 const Payments = () => {
     const { PostApi } = useAppContext();
@@ -18,12 +20,19 @@ const Payments = () => {
 
     const headers = { Authorization: `Bearer ${token}` };
 
-    // ---------------- MODAL STATES ----------------
+    // ---------------- PAYMENT MODAL STATES ----------------
     const [loanModalOpen, setLoanModalOpen] = useState(false);
     const [selectedLoan, setSelectedLoan] = useState(null);
     const [paymentType, setPaymentType] = useState("");
     const [adjustmentType, setAdjustmentType] = useState("");
     const [amount, setAmount] = useState("");
+
+    // ---------------- ALERT STATES ----------------
+    const [alertOpen, setAlertOpen] = useState(false);
+    const [alertType, setAlertType] = useState("info");
+    const [alertTitle, setAlertTitle] = useState("");
+    const [alertMsg, setAlertMsg] = useState("");
+    const [onConfirmAction, setOnConfirmAction] = useState(null);
 
     useEffect(() => {
         if (tableRef.current) tableRef.current.onQueryChange();
@@ -40,12 +49,10 @@ const Payments = () => {
                     headers
                 );
 
-                const items = response?.data || [];
-
                 resolve({
-                    data: items,
+                    data: response?.data || [],
                     page: 0,
-                    totalCount: items.length,
+                    totalCount: response?.data?.length || 0,
                 });
             } catch (error) {
                 console.log("Error fetching loans:", error);
@@ -54,7 +61,7 @@ const Payments = () => {
         });
     };
 
-    // ---------------- OPEN / CLOSE MODAL ----------------
+    // ---------------- MODAL HANDLERS ----------------
     const openLoanModal = (loan) => {
         setSelectedLoan(loan);
         setPaymentType("");
@@ -67,7 +74,31 @@ const Payments = () => {
         setLoanModalOpen(false);
     };
 
-    // ---------------- SUBMIT PAYMENT ----------------
+    // ---------------- SUBMIT PAYMENT (CONFIRM FIRST) ----------------
+    const confirmPayment = () => {
+        if (!paymentType) {
+            showAlert("info", "Missing Data", "Please select payment type");
+            return;
+        }
+
+        if (paymentType === "PartPayment" && (!adjustmentType || !amount)) {
+            showAlert(
+                "info",
+                "Missing Data",
+                "Please select adjustment type and enter amount"
+            );
+            return;
+        }
+
+        showAlert(
+            "yesorno",
+            "Confirm Payment",
+            `Are you sure you want to proceed with this payment for Loan ${selectedLoan.loanNumber}?`,
+            savePayment
+        );
+    };
+
+    // ---------------- API CALL ----------------
     const savePayment = async () => {
         try {
             let payload = {};
@@ -75,11 +106,6 @@ const Payments = () => {
             if (paymentType === "FORECLOSURE") {
                 payload = { paymentType: "FORECLOSURE" };
             } else {
-                if (!amount || !adjustmentType) {
-                    alert("Please select adjustment type and amount");
-                    return;
-                }
-
                 payload = {
                     paymentType: "PartPayment",
                     adjustmentType,
@@ -94,13 +120,31 @@ const Payments = () => {
                 headers
             );
 
-            alert("Payment successful");
-            closeLoanModal();
+            setLoanModalOpen(false);
+            showAlert("success", "Success", "Payment completed successfully");
             tableRef.current.onQueryChange();
         } catch (error) {
-            console.log("Payment error:", error);
-            alert("Payment failed");
+            const errorMsg =
+                error?.response?.data?.message ||
+                error?.data?.message ||
+                "Payment failed. Please try again.";
+
+            showAlert("error", "Payment Failed", errorMsg);
         }
+    };
+
+    // ---------------- ALERT HELPER ----------------
+    const showAlert = (type, title, msg, confirmAction = null) => {
+        setAlertType(type);
+        setAlertTitle(title);
+        setAlertMsg(msg);
+        setOnConfirmAction(() => confirmAction);
+        setAlertOpen(true);
+    };
+
+    const closeAlert = () => {
+        setAlertOpen(false);
+        setOnConfirmAction(null);
     };
 
     // ---------------- TABLE COLUMNS ----------------
@@ -175,7 +219,7 @@ const Payments = () => {
                 </div>
             </div>
 
-            {/* ---------------- PAYMENT MODAL (CONFIRM STYLE) ---------------- */}
+            {/* ---------------- PAYMENT MODAL ---------------- */}
             <Modal
                 centered
                 show={loanModalOpen}
@@ -217,7 +261,7 @@ const Payments = () => {
                                     onChange={(e) => setAdjustmentType(e.target.value)}
                                 >
                                     <option value="">Select</option>
-                                    <option value="REDUCE_TENURE">Reduce Tenure</option>
+                                    <option value="REDUCE TENURE">Reduce Tenure</option>
                                     <option value="REDUCE EMI">Reduce EMI</option>
                                 </select>
 
@@ -237,12 +281,25 @@ const Payments = () => {
                         <button className="btnCancel" onClick={closeLoanModal}>
                             Cancel
                         </button>
-                        <button className="btnConfirm" onClick={savePayment}>
+                        <button className="btnConfirm" onClick={confirmPayment}>
                             Yes, Proceed
                         </button>
                     </div>
                 </div>
             </Modal>
+
+            {/* ---------------- ALERT COMPONENT ---------------- */}
+            <Alert
+                open={alertOpen}
+                type={alertType}
+                title={alertTitle}
+                msg={alertMsg}
+                onClose={closeAlert}
+                onConfirm={() => {
+                    closeAlert();
+                    onConfirmAction && onConfirmAction();
+                }}
+            />
         </div>
     );
 };

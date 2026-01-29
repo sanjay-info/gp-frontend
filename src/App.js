@@ -75,6 +75,14 @@ import IntentView from './Pages/Admin/Intentview';
 import LoanApplicationView from './Pages/Admin/LoanApplicationView';
 import ViewUserAdminNew from './Pages/Admin/ViewloanesbyAdmin';
 import LoanPayout from './Pages/FINANCE/Loanpayout';
+import GMFinanceLoan from './Pages/GM-Finance/GMFinanceLoan';
+import GMFinanceLoanView from './Pages/GM-Finance/GMFinanceLoanView';
+import DocumentMaster from './Pages/FINANCE/DocumentMaster';
+import DocumentTemplates from './Pages/FINANCE/DocumentTemplate';
+import Documents from './Pages/FINANCE/Document';
+import LoanApprovals from './Pages/GM-Finance/GMFinanceLoan';
+import Payments from './Pages/FINANCE/Payment';
+
 
 const simplifiedConfig = {
   ondevtoolopen: (type, next) => {
@@ -250,12 +258,64 @@ function App() {
             <Route path='/UnitAllowcation' element={roleId !== null && roleId !== undefined && roleId !== "" && (storedRoleId[0].id === 4 || storedRoleId[0].id === 6) ? <UnitAllowcation /> : <Login />} />
             <Route path='/DividendYear' element={roleId !== null && roleId !== undefined && roleId !== "" && (storedRoleId[0].id === 4 || storedRoleId[0].id === 6) ? <DividendYear /> : <Login />} />
             <Route path='/LoanPayout' element={roleId !== null && roleId !== undefined && roleId !== "" && (storedRoleId[0].id === 4 || storedRoleId[0].id === 6) ? <LoanPayout /> : <Login />} />
+            <Route
+              path="/DocumentMasters"
+              element={
+                roleId !== null &&
+                  roleId !== undefined &&
+                  roleId !== "" &&
+                  storedRoleId[0].id === 4
+                  ? <DocumentMaster />
+                  : <Login />
+              }
+            />
+
+            <Route
+              path="/DocumentTemplates"
+              element={
+                roleId !== null &&
+                  roleId !== undefined &&
+                  roleId !== "" &&
+                  storedRoleId[0].id === 4
+                  ? <DocumentTemplates />
+                  : <Login />
+              }
+            />
+
+            <Route
+              path="/Documents"
+              element={
+                roleId !== null &&
+                  roleId !== undefined &&
+                  roleId !== "" &&
+                  storedRoleId[0].id === 4
+                  ? <Documents />
+                  : <Login />
+              }
+            />
+            <Route path='/Payments' element={roleId !== null && roleId !== undefined && roleId !== "" && (storedRoleId[0].id === 4 || storedRoleId[0].id === 6) ? <Payments /> : <Login />} />
+
+
 
 
             {/* ----------------- Secretariat ----------------------- */}
             <Route path="/DividendDeclaration" element={roleId !== null && roleId !== undefined && roleId !== "" && storedRoleId[0].id === 6 ? <DividendDeclaration /> : <Login />} />
             <Route path="/AllotmentForm" element={roleId !== null && roleId !== undefined && roleId !== "" && storedRoleId[0].id === 6 ? <AllotmentForm /> : <Login />} />
             <Route path="/DividendPayout" element={roleId !== null && roleId !== undefined && roleId !== "" && storedRoleId[0].id === 6 ? <DividendPayout /> : <Login />} />
+
+
+            <Route path="/LoanApprovals/:status" element={roleId !== null && roleId !== undefined && roleId !== "" && storedRoleId[0].id === 7 ? <LoanApprovals /> : <Login />} />
+            <Route
+              path="/GMFinanceLoanView/:loanId"
+              element={
+                roleId !== null &&
+                  roleId !== undefined &&
+                  roleId !== "" &&
+                  storedRoleId[0].id === 7
+                  ? <LoanView />
+                  : <Login />
+              }
+            />
 
           </Routes>
         </HashRouter>

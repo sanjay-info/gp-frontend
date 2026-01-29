@@ -228,6 +228,8 @@ const Login = () => {
                         if (roleId === 3) navigate('/ApproverReport');
                         if (roleId === 4) navigate('/FinanceReport');
                         if (roleId === 6) navigate('/DividendDeclaration');
+                        // if (roleId === 7) navigate('/GMFinanceLoan');
+                        if (roleId === 7) navigate('/LoanApprovals/pending');
 
                         toast.success('Login Successful');
                     }

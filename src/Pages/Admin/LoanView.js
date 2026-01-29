@@ -5,6 +5,7 @@ import { useSidebar } from "../components/SidebarContext";
 import { useAppContext } from "../components/AppProvider";
 import { useNavigate, useParams } from "react-router-dom";
 import "./LoanView.css";
+import { FaCheckCircle, FaTimesCircle, FaEllipsisV } from "react-icons/fa";
 
 /* ================= UTIL ================= */
 const formatCurrency = (value) =>
@@ -14,7 +15,7 @@ const formatCurrency = (value) =>
 
 const LoanView = () => {
     const { sideBarCollapse } = useSidebar();
-    const { PostApi } = useAppContext();
+    const { PostApi, GetApi } = useAppContext();
     const navigate = useNavigate();
     const { loanId } = useParams();
 
@@ -30,6 +31,84 @@ const LoanView = () => {
     const token = localStorage.getItem("token");
     const headers = { Authorization: `Bearer ${token}` };
 
+    const [isApprovalConfirmOpen, setIsApprovalConfirmOpen] = useState(false);
+    const [approvalEmi, setApprovalEmi] = useState(null);
+
+
+
+    const storedRoleId = JSON.parse(localStorage.getItem("Role_id")) || [];
+    const roleId = storedRoleId?.[0]?.id;
+
+    const isAdmin = roleId === 1;
+    const isGMFinance = roleId === 7
+
+    const [showRejectModal, setShowRejectModal] = useState(false);
+    const [selectedEmi, setSelectedEmi] = useState(null);
+    const [remarks, setRemarks] = useState("");
+
+    const [showRejectReasonModal, setShowRejectReasonModal] = useState(false);
+    const [selectedRejectReason, setSelectedRejectReason] = useState("");
+
+    const [actionMenuEmi, setActionMenuEmi] = useState(null);
+    const [showMarkPaidConfirm, setShowMarkPaidConfirm] = useState(false);
+
+    const isPaymentsTab = activeTab === "payments";
+    const [paymentDetails, setPaymentDetails] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+
+    useEffect(() => {
+        if (activeTab !== "payments") return;
+
+        const fetchPaymentDetails = async () => {
+            try {
+                setLoading(true);
+
+                const headers = {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                };
+
+                const res = await GetApi(
+                    "GET",
+                    `/user/loan-paymentdetails/${loanId}`,
+                    null,
+                    headers
+                );
+
+                if (res?.status === 200) {
+                    setPaymentDetails(res.data || []);
+                } else {
+                    setPaymentDetails([]);
+                }
+            } catch (err) {
+                console.error("Payment API error", err);
+                setPaymentDetails([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPaymentDetails();
+    }, [activeTab]);
+
+
+
+
+
+
+    const getLoanDetailsUrl = (loanId) => {
+        // GM Finance role
+        if (roleId === 7) {
+            return `/gmfinance/getLoanDetailsById/${loanId}`;
+        }
+
+        // Existing (ADMIN / USER) – DO NOT CHANGE
+        return `/user/getLoanDetailsById/${loanId}`;
+    };
+
+
     /* ---------- FETCH LOAN DETAILS ---------- */
     useEffect(() => {
         if (!loanId) return;
@@ -38,34 +117,63 @@ const LoanView = () => {
             try {
                 const res = await PostApi(
                     "GET",
-                    `/user/getLoanDetailsById/${loanId}`,
+                    getLoanDetailsUrl(loanId),
                     null,
                     headers
                 );
+
                 setData(res?.data?.loan);
                 setInstallments(res?.data?.installments || []);
                 setDisbursements(res?.data?.disbursements || []);
-
             } catch (err) {
-                console.error(err);
+                console.error("Loan fetch failed:", err);
             }
         };
 
         fetchLoanDetails();
     }, [loanId]);
 
+
+    const statusPriority = {
+        "APPROVED": 1,
+        "REJECTED": 2,
+        "NOT PAID": 3,
+        "PAID": 4
+    };
+
+    const sourceInstallments =
+        activeTab === "payments"
+            ? paymentDetails       // from /loan-paymentdetails API
+            : installments;        // schedules data (existing)
+
+
     /* ---------- SORT INSTALLMENTS ---------- */
-    const sortedInstallments = [...installments].sort((a, b) => {
-        if (a.paymentStatus === "SUCCESS" && b.paymentStatus !== "SUCCESS") return -1;
-        if (a.paymentStatus !== "SUCCESS" && b.paymentStatus === "SUCCESS") return 1;
+    const sortedInstallments = [...sourceInstallments].sort((a, b) => {
+        const aPriority = statusPriority[a.paymentStatus] ?? 99;
+        const bPriority = statusPriority[b.paymentStatus] ?? 99;
+
+        // Sort by status priority first
+        if (aPriority !== bPriority) {
+            return aPriority - bPriority;
+        }
+
+        // Same status → sort by installment number
         return a.installmentNumber - b.installmentNumber;
     });
+
 
     /* ---------- PAYMENT HANDLERS ---------- */
     const openConfirmModal = (emi) => {
         setSelectedInstallment(emi);
         setShowConfirmModal(true);
     };
+
+    const openRejectModal = (emi) => {
+        setSelectedEmi(emi);
+        setRemarks("");
+        setShowRejectModal(true);
+    };
+
 
     const confirmMarkPaid = async () => {
         if (!selectedInstallment) return;
@@ -82,17 +190,31 @@ const LoanView = () => {
 
             await PostApi(
                 "POST",
-                `/user/installment/${selectedInstallment.scheduleId}/success`,
+                `/user/installment/${selectedInstallment.paymentId}/success`,
                 payload, // ✅ derived from selectedInstallment
                 headers
             );
 
             setInstallments((prev) =>
                 prev.map((i) =>
-                    i.scheduleId === selectedInstallment.scheduleId
+                    i.paymentId === selectedInstallment.paymentId
                         ? {
                             ...i,
-                            paymentStatus: "SUCCESS",
+                            paymentStatus: "PAID",
+                            actualPaymentDate: payload.paymentDate,
+                            transactionNumber: payload.transactionNumber,
+                            modeOfPayment: payload.modeOfPayment,
+                            notes: payload.notes,
+                        }
+                        : i
+                )
+            );
+            setPaymentDetails((prev) =>
+                prev.map((i) =>
+                    i.paymentId === selectedInstallment.paymentId
+                        ? {
+                            ...i,
+                            paymentStatus: "PAID",
                             actualPaymentDate: payload.paymentDate,
                             transactionNumber: payload.transactionNumber,
                             modeOfPayment: payload.modeOfPayment,
@@ -128,7 +250,94 @@ const LoanView = () => {
     };
 
 
+    const handleSubmitApproval = async (emi) => {
+        try {
+            await PostApi(
+                "POST",
+                `/user/installment/${emi.paymentId}/submit`,
+                null,
+                headers
+            );
 
+            setPaymentDetails((prev) =>
+                prev.map((i) =>
+                    i.paymentId === emi.paymentId
+                        ? { ...i, paymentStatus: "IN REVIEW" }
+                        : i
+                )
+            );
+            setInstallments((prev) =>
+                prev.map((i) =>
+                    i.paymentId === emi.paymentId
+                        ? { ...i, paymentStatus: "IN REVIEW" }
+                        : i
+                )
+            );
+        } catch (err) {
+            console.error(err);
+            alert("Submit approval failed");
+        }
+    };
+
+
+    const handleApprove = async (emi) => {
+        try {
+            await PostApi(
+                "POST",
+                `/gmfinance/installment/${emi.paymentId}/approve`,
+                null,
+                headers
+            );
+
+            setInstallments((prev) =>
+                prev.map((i) =>
+                    i.paymentId === emi.paymentId
+                        ? { ...i, paymentStatus: "APPROVED" }
+                        : i
+                )
+            );
+        } catch (err) {
+            console.error(err);
+            alert("Approve failed");
+        }
+    };
+
+    const handleRejectConfirm = async () => {
+        if (!remarks.trim()) {
+            alert("Remarks are required");
+            return;
+        }
+
+        try {
+            await PostApi(
+                "POST",
+                `/gmfinance/installment/${selectedEmi.paymentId}/reject`,
+                {
+                    remarks: remarks
+                },
+                headers
+            );
+
+            setInstallments((prev) =>
+                prev.map((i) =>
+                    i.paymentId === selectedEmi.paymentId
+                        ? { ...i, paymentStatus: "NOT PAID" }
+                        : i
+                )
+            );
+
+            setShowRejectModal(false);
+            setSelectedEmi(null);
+        } catch (err) {
+            console.error(err);
+            alert("Reject failed");
+        }
+    };
+
+    const openRejectReasonModal = (reason) => {
+        setSelectedRejectReason(reason);
+        setShowRejectReasonModal(true);
+    };
 
 
     if (!data) return null;
@@ -152,7 +361,7 @@ const LoanView = () => {
 
                         {/* ---------- TABS ---------- */}
                         <div className="LV_tabs">
-                            {["summary", "loaner", "repayment", "disbursement", "intent"].map((tab) => (
+                            {["summary", "loaner", "schedules", "disbursement", "intent", "payments"].map((tab) => (
                                 <div
                                     key={tab}
                                     className={`LV_tab ${activeTab === tab ? "active" : ""}`}
@@ -365,20 +574,21 @@ const LoanView = () => {
                         )}
 
                         {/* ================= REPAYMENT ================= */}
-                        {activeTab === "repayment" && (
+                        {(activeTab === "schedules" || activeTab === "payments") && (
                             <div className="LV_tab_content">
 
-                                <div className="LV_card" style={{ marginBottom: 20 }}>
-                                    <h4>Repayment Details</h4>
+                                {!isPaymentsTab && (
+                                    <div className="LV_card" style={{ marginBottom: 20 }}>
+                                        <h4>Payment Details</h4>
 
-                                    <div className="LV_horizontal">
-                                        <div className="LV_h_item"><span>EMI</span><p>{formatCurrency(data.emiAmount)}</p></div>
-                                        <div className="LV_h_item"><span>Total Paid</span><p>{formatCurrency(data.totalPaidTillDate)}</p></div>
-                                        <div className="LV_h_item"><span>Outstanding</span><p>{formatCurrency(data.outstandingPrincipal)}</p></div>
-                                        <div className="LV_h_item"><span>Next Due</span><p>{data.nextDueDate}</p></div>
+                                        <div className="LV_horizontal">
+                                            <div className="LV_h_item"><span>EMI</span><p>{formatCurrency(data.emiAmount)}</p></div>
+                                            <div className="LV_h_item"><span>Total Paid</span><p>{formatCurrency(data.totalPaidTillDate)}</p></div>
+                                            <div className="LV_h_item"><span>Outstanding</span><p>{formatCurrency(data.outstandingPrincipal)}</p></div>
+                                            <div className="LV_h_item"><span>Next Due</span><p>{data.nextDueDate}</p></div>
+                                        </div>
                                     </div>
-                                </div>
-
+                                )}
                                 <div className="LV_card">
                                     <h4>Repayment Schedule</h4>
 
@@ -386,61 +596,109 @@ const LoanView = () => {
                                         <thead>
                                             <tr>
                                                 <th>#</th>
-                                                <th>Due Date</th>
-                                                <th>Principal</th>
-                                                <th>Interest</th>
-                                                <th>TDS</th>
-                                                <th>Interest After TDS</th>
-                                                <th>Total</th>
+
+                                                {isPaymentsTab && (
+                                                    <>
+                                                        <th>Payment ID</th>
+                                                        <th>Payment Type</th>
+                                                    </>
+                                                )}
+
+                                                {!isPaymentsTab && (
+                                                    <>
+                                                        <th>Due Date</th>
+                                                        <th>Principal</th>
+                                                        <th>Interest</th>
+                                                        <th>TDS</th>
+                                                        <th>Interest After TDS</th>
+                                                        <th>Total</th>
+                                                    </>
+                                                )}
+
+                                                {isPaymentsTab && <th>Installment Amount</th>}
+
                                                 <th>Status</th>
-                                                <th>Action</th>
+
+                                                {isPaymentsTab && isAdmin && <th>Action</th>}
                                             </tr>
                                         </thead>
 
                                         <tbody>
                                             {sortedInstallments.map((emi) => (
-                                                <tr key={emi.scheduleId}>
+                                                <tr key={emi.paymentId || emi.paymentId}>
                                                     <td>{emi.installmentNumber}</td>
-                                                    <td>{emi.dueDate}</td>
 
-                                                    <td>{formatCurrency(emi.principalComponent)}</td>
-                                                    <td>{formatCurrency(emi.interestComponent)}</td>
+                                                    {/* PAYMENTS TAB EXTRA COLS */}
+                                                    {isPaymentsTab && (
+                                                        <>
+                                                            <td>{emi.paymentId}</td>
+                                                            <td>{emi.loanPaymentType}</td>
+                                                        </>
+                                                    )}
 
-                                                    {/* Backend values */}
-                                                    <td>{formatCurrency(emi.tdsAmount)}</td>
-                                                    <td>{formatCurrency(emi.interestAfterTds)}</td>
+                                                    {/* SCHEDULES TAB */}
+                                                    {!isPaymentsTab && (
+                                                        <>
+                                                            <td>{emi.dueDate}</td>
+                                                            <td>{formatCurrency(emi.principalComponent)}</td>
+                                                            <td>{formatCurrency(emi.interestComponent)}</td>
+                                                            <td>{formatCurrency(emi.tdsAmount)}</td>
+                                                            <td>{formatCurrency(emi.interestAfterTds)}</td>
+                                                            <td>{formatCurrency(emi.totalDue)}</td>
+                                                        </>
+                                                    )}
 
-                                                    <td>{formatCurrency(emi.totalDue)}</td>
+                                                    {/* PAYMENTS TAB AMOUNT */}
+                                                    {isPaymentsTab && (
+                                                        <td>{formatCurrency(emi.installmentAmount)}</td>
+                                                    )}
 
+                                                    {/* STATUS */}
                                                     <td>
-                                                        <span
-                                                            className={
-                                                                emi.paymentStatus === "SUCCESS"
-                                                                    ? "status-success"
-                                                                    : "status-pending"
-                                                            }
-                                                        >
-                                                            {emi.paymentStatus}
-                                                        </span>
-                                                    </td>
-
-                                                    <td>
-                                                        {emi.paymentStatus === "SUCCESS" ? (
-                                                            <button className="btn btn-sm btn-success" disabled>
-                                                                Paid
-                                                            </button>
-                                                        ) : (
-                                                            <button
-                                                                className="btn btn-sm btn-outline-primary"
-                                                                onClick={() => openConfirmModal(emi)}
+                                                        <div className="LV_status_wrap">
+                                                            <span
+                                                                className={`LV_status_chip ${emi.paymentStatus === "PAID"
+                                                                    ? "success"
+                                                                    : emi.paymentStatus === "REJECTED"
+                                                                        ? "danger"
+                                                                        : "pending"
+                                                                    }`}
                                                             >
-                                                                Mark as Paid
-                                                            </button>
-                                                        )}
+                                                                {emi.paymentStatus}
+                                                            </span>
+                                                        </div>
                                                     </td>
+
+                                                    {/* ACTION */}
+                                                    {isPaymentsTab && isAdmin && (
+                                                        <td className="LV_action_td">
+                                                            {emi.paymentStatus === "NOT PAID" || emi.paymentStatus === "REJECTED" ? (
+                                                                <button
+                                                                    className="LV_btn outline"
+                                                                    onClick={() => {
+                                                                        setApprovalEmi(emi);
+                                                                        setIsApprovalConfirmOpen(true);
+                                                                    }}                                                                >
+                                                                    Submit for Approval
+                                                                </button>
+                                                            ) : emi.paymentStatus === "IN REVIEW" ? (
+                                                                <span className="LV_badge warning">Approval Pending</span>
+                                                            ) : emi.paymentStatus === "APPROVED" ? (
+                                                                <button
+                                                                    className="LV_btn primary"
+                                                                    onClick={() => openConfirmModal(emi)}
+                                                                >
+                                                                    Mark as Paid
+                                                                </button>
+                                                            ) : (
+                                                                <span className="LV_badge" />
+                                                            )}
+                                                        </td>
+                                                    )}
                                                 </tr>
                                             ))}
                                         </tbody>
+
                                     </table>
                                 </div>
 
@@ -615,7 +873,143 @@ const LoanView = () => {
                     </div>
                 </div>
             )}
+            {showRejectModal && (
+                <div className="modalOverlay">
+                    <div className="modalBox">
+                        <h3>Reject Installment</h3>
 
+                        <label>Remarks</label>
+                        <textarea
+                            placeholder="Enter rejection reason"
+                            value={remarks}
+                            onChange={(e) => setRemarks(e.target.value)}
+                            rows={4}
+                        />
+
+                        <div className="modalActions">
+                            <button
+                                className="cancelBtn"
+                                onClick={() => setShowRejectModal(false)}
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                className="rejectBtn"
+                                onClick={handleRejectConfirm}
+                            >
+                                Confirm Reject
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {isApprovalConfirmOpen && (
+                <div className="modalOverlay">
+                    <div className="modalBox">
+                        <h3>Submit for Approval</h3>
+
+                        <p>
+                            Are you sure you want to submit
+                            <strong> Installment #{approvalEmi?.installmentNumber}</strong>
+                            for approval?
+                        </p>
+
+                        <div className="modalActions">
+                            <button
+                                className="cancelBtn"
+                                onClick={() => {
+                                    setIsApprovalConfirmOpen(false);
+                                    setApprovalEmi(null);
+                                }}
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                className="confirmBtn"
+                                onClick={() => {
+                                    handleSubmitApproval(approvalEmi);
+                                    setIsApprovalConfirmOpen(false);
+                                    setApprovalEmi(null);
+                                }}
+                            >
+                                Confirm Submit
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showRejectReasonModal && (
+                <div className="LV_modal_overlay">
+                    <div className="LV_modal_box">
+
+                        <h3>Rejection Reason</h3>
+
+                        <p className="LV_modal_text">
+                            {selectedRejectReason}
+                        </p>
+
+                        <div className="LV_modal_actions">
+                            <button
+                                className="LV_btn primary"
+                                onClick={() => setShowRejectReasonModal(false)}
+                            >
+                                Close
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            )}
+
+            {showMarkPaidConfirm && (
+                <div className="confirm-modal-backdrop">
+                    <div className="confirm-modal">
+
+                        {/* Header */}
+                        <div className="confirm-modal-header">
+                            <h3>Confirm Action</h3>
+                        </div>
+
+                        {/* Body */}
+                        <div className="confirm-modal-body">
+                            <p>
+                                Are you sure you want to mark
+                                <strong> EMI {selectedInstallment?.installmentNumber}</strong>
+                                as paid?
+                            </p>
+
+                            <p className="confirm-hint">
+                                This action cannot be undone.
+                            </p>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="confirm-modal-footer">
+                            <button
+                                className="btn-outline"
+                                onClick={() => setShowMarkPaidConfirm(false)}
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                className="btn-primary"
+                                onClick={() => {
+                                    setShowMarkPaidConfirm(false);
+                                    setShowConfirmModal(true); // open payment modal
+                                }}
+                            >
+                                Yes, Continue
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            )}
 
         </>
     );
