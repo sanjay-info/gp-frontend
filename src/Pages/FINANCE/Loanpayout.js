@@ -1,250 +1,408 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState, useEffect } from "react";
 import Header from "../components/Header";
 import SidePanel from "../components/SidePanel";
 import { useSidebar } from "../components/SidebarContext";
 import { useAppContext } from "../components/AppProvider";
+import Select from "react-select";
 import MaterialTable from "@material-table/core";
 import TableOptions from "../components/TableOptions";
-import { useLocation } from "react-router-dom";
-import Modal from "react-bootstrap/Modal";
+import DatePicker from "react-datepicker";
+import "./LoanPayout.css";
+import moment from "moment";
 import { AiOutlineClose } from "react-icons/ai";
+import { Modal } from "react-bootstrap";
+import Alert from "../components/Alert";
 
-const Payments = () => {
+/* ===========================
+   HARD CODED FILTER OPTIONS
+=========================== */
+
+const accountTypeOptions = [
+    { value: "COMPANY", label: "Company" },
+    { value: "INDIVIDUAL", label: "Individual" },
+    { value: "BANK", label: "Bank" },
+    { value: "NBFC", label: "NBFC" },
+];
+
+const paymentStatusOptions = [
+    { value: "SUCCESS", label: "Success" },
+    { value: "PENDING", label: "Pending" },
+];
+
+const LoanPayout = () => {
     const { PostApi } = useAppContext();
     const { sideBarCollapse } = useSidebar();
     const [token] = useState(localStorage.getItem("token"));
-    const tableRef = useRef(null);
-    const location = useLocation();
 
-    const headers = { Authorization: `Bearer ${token}` };
-
-    // ---------------- MODAL STATES ----------------
-    const [loanModalOpen, setLoanModalOpen] = useState(false);
-    const [selectedLoan, setSelectedLoan] = useState(null);
-    const [paymentType, setPaymentType] = useState("");
-    const [adjustmentType, setAdjustmentType] = useState("");
-    const [amount, setAmount] = useState("");
-
-    useEffect(() => {
-        if (tableRef.current) tableRef.current.onQueryChange();
-    }, [location.pathname]);
-
-    // ---------------- FETCH LOANS ----------------
-    const fetchTableData = () => {
-        return new Promise(async (resolve) => {
-            try {
-                const response = await PostApi(
-                    "GET",
-                    "/user/getAllLoans",
-                    null,
-                    headers
-                );
-
-                const items = response?.data || [];
-
-                resolve({
-                    data: items,
-                    page: 0,
-                    totalCount: items.length,
-                });
-            } catch (error) {
-                console.log("Error fetching loans:", error);
-                resolve({ data: [], page: 0, totalCount: 0 });
-            }
-        });
+    const headers = {
+        Authorization: `Bearer ${token}`,
     };
 
-    // ---------------- OPEN / CLOSE MODAL ----------------
-    const openLoanModal = (loan) => {
-        setSelectedLoan(loan);
-        setPaymentType("");
-        setAdjustmentType("");
-        setAmount("");
+    /* ===========================
+       FILTER STATES (REPLACED)
+    =========================== */
+
+    const [startDate, setStartDate] = useState(null);
+    const [endDate, setEndDate] = useState(null);
+    const [accountType, setAccountType] = useState(null);
+    const [paymentStatus, setPaymentStatus] = useState(null);
+
+    /* ===========================
+       DATA STATES (UNCHANGED)
+    =========================== */
+
+    const [loanData, setLoanData] = useState([]);
+    const [loanIds, setLoanIds] = useState([]);
+
+    const [payoutDate, setPayoutDate] = useState(null);
+    const [modeOfPayment, setModeofPayment] = useState("");
+    const [payoutMsg, setPayoutMsg] = useState("");
+    const [transactionNumber, setTransactionNumber] = useState("");
+
+    const [loanModalOpen, setLoanModalOpen] = useState(false);
+    const [formErrors, setFormErrors] = useState({});
+
+    const [userAlert, setUserAlert] = useState(false);
+    const [alertMsg, setAlertMsg] = useState("");
+    const [alertType, setAlertType] = useState("");
+    const [alertTitle, setAlertTitle] = useState("");
+    const [alertConfirm, setAlertConfirm] = useState(() => null);
+    const [alertClose, setAlertClose] = useState(() => null);
+
+    const [tableKey, setTableKey] = useState(0);
+    const [modeOfPaymentList, setModeOfPaymentList] = useState([]);
+
+    /* ===========================
+       FETCH LOAN DATA (NEW API)
+    =========================== */
+
+    useEffect(() => {
+        if (!startDate || !endDate || !accountType || !paymentStatus) return;
+
+        const formData = new URLSearchParams();
+        formData.append("fromDate", moment(startDate).format("YYYY-MM-DD"));
+        formData.append("toDate", moment(endDate).format("YYYY-MM-DD"));
+        formData.append("paymentStatus", paymentStatus.value);
+        formData.append("accountType", accountType.value);
+        formData.append("page", 0);
+        formData.append("size", 5);
+
+        PostApi("POST", "/user/repayment-schedules", formData, {
+            ...headers,
+            "Content-Type": "application/x-www-form-urlencoded",
+        })
+            .then((res) => {
+                setLoanData(
+                    (res.data.content || []).map((item) => ({
+                        ...item,
+                        id: item.scheduleId,
+                        utrNo: item.utrNo || "Enter the transaction no",
+                    }))
+                );
+                setTableKey((k) => k + 1);
+            })
+            .catch(() => setLoanData([]));
+    }, [startDate, endDate, accountType, paymentStatus]);
+
+    /* ===========================
+       TABLE COLUMNS (KEPT)
+    =========================== */
+
+    const columns = [
+        { title: "Loaner Name", field: "loanerName", editable: "never" },
+        { title: "Loan Number", field: "loanNumber", editable: "never" },
+        { title: "Installment ID", field: "installmentId", editable: "never" },
+        {
+            title: "Due Date",
+            render: (row) => moment(row.dueDate).format("DD-MM-YYYY"),
+            editable: "never",
+        },
+        {
+            title: "Amount",
+            render: (row) =>
+                `₹ ${row.actualAmountToPay.toLocaleString("en-IN")}`,
+            editable: "never",
+        },
+        {
+            title: (
+                <span>
+                    Transaction No <span className="required_star">*</span>
+                </span>
+            ),
+            field: "utrNo",
+            editComponent: (props) => (
+                <input
+                    value={
+                        props.value !== "Enter the transaction no" ? props.value : ""
+                    }
+                    onChange={(e) => props.onChange(e.target.value)}
+                    placeholder="Enter transaction no"
+                />
+            ),
+        },
+    ];
+
+    /* ===========================
+       SELECTION (UNCHANGED)
+    =========================== */
+
+    const handleSelectionChange = (rows) => {
+        setLoanIds(
+            rows.map((row) => ({
+                scheduleId: row.scheduleId,
+                utrNo: row.utrNo,
+            }))
+        );
+    };
+
+    /* ===========================
+       OPEN MODAL (UNCHANGED)
+    =========================== */
+
+    const openLoanPayout = () => {
+        if (loanIds.length === 0) {
+            setUserAlert(true);
+            setAlertTitle("Info");
+            setAlertMsg("Please select at least one record.");
+            setAlertType("error");
+            setAlertClose(() => () => setUserAlert(false));
+            return;
+        }
+
+        const invalidIndex = loanIds.findIndex(
+            (r) =>
+                !r.utrNo ||
+                r.utrNo.trim() === "" ||
+                r.utrNo === "Enter the transaction no"
+        );
+
+        if (invalidIndex !== -1) {
+            setUserAlert(true);
+            setAlertTitle("Info");
+            setAlertMsg(
+                `Please enter a valid transaction number for selected row ${invalidIndex + 1}`
+            );
+            setAlertType("error");
+            setAlertClose(() => () => setUserAlert(false));
+            return;
+        }
+
+        // ✅ All rows valid → open modal
+        getModeofPayment();
         setLoanModalOpen(true);
     };
 
     const closeLoanModal = () => {
         setLoanModalOpen(false);
+        setPayoutDate(null);
+        setModeofPayment("");
+        setTransactionNumber("");
+        setFormErrors({});
     };
 
-    // ---------------- SUBMIT PAYMENT ----------------
-    const savePayment = async () => {
-        try {
-            let payload = {};
+    /* ===========================
+       SUBMIT PAYOUT (NEW API)
+    =========================== */
 
-            if (paymentType === "FORECLOSURE") {
-                payload = { paymentType: "FORECLOSURE" };
-            } else {
-                if (!amount || !adjustmentType) {
-                    alert("Please select adjustment type and amount");
-                    return;
-                }
+    const saveLoanPayout = () => {
+        const errors = {};
+        if (!payoutDate) errors.payoutDate = "Select Payment Date";
+        if (!modeOfPayment) errors.modeOfPayment = "Select Mode of Payment";
+        if (!transactionNumber)
+            errors.transactionNumber = "Enter Transaction Number";
 
-                payload = {
-                    paymentType: "PartPayment",
-                    adjustmentType,
-                    partPaymentAmount: Number(amount),
-                };
-            }
+        setFormErrors(errors);
+        if (Object.keys(errors).length) return;
 
-            await PostApi(
-                "POST",
-                `/user/payment/${selectedLoan.loanId}/submit-payment`,
-                payload,
-                headers
-            );
+        const payload = {
+            scheduleIds: loanIds.map((i) => i.scheduleId),
+            paymentDate: moment(payoutDate).format("YYYY-MM-DD"),
+            modeOfPayment,
+            transactionNumber,
+            notes: payoutMsg,
+        };
 
-            alert("Payment successful");
-            closeLoanModal();
-            tableRef.current.onQueryChange();
-        } catch (error) {
-            console.log("Payment error:", error);
-            alert("Payment failed");
-        }
+        PostApi("POST", "/user/installments/success", payload, headers)
+            .then(() => {
+                setUserAlert(true);
+                setAlertTitle("Success");
+                setAlertMsg("Loan payout completed successfully");
+                setAlertType("success");
+                setAlertClose(() => () => window.location.reload());
+            })
+            .catch(() => {
+                setUserAlert(true);
+                setAlertTitle("Error");
+                setAlertMsg("Loan payout failed");
+                setAlertType("error");
+            });
     };
 
-    // ---------------- TABLE COLUMNS ----------------
-    const columns = [
-        { title: "Loan No", field: "loanNumber" },
-        { title: "Loaner Name", field: "loanerName" },
+    const getModeofPayment = () => {
+        PostApi("POST", "/userbond/modeOfPayment", null, headers).then((res) =>
+            setModeOfPaymentList(res.data)
+        );
+    };
 
-        {
-            title: "Outstanding",
-            field: "outstandingPrincipal",
-            render: (row) => `₹ ${row.outstandingPrincipal?.toLocaleString()}`,
-        },
-
-        {
-            title: "EMI",
-            field: "emiAmount",
-            render: (row) => `₹ ${row.emiAmount?.toLocaleString()}`,
-        },
-
-        {
-            title: "Status",
-            field: "loanStatus",
-            render: (row) => (
-                <span
-                    style={{
-                        color: row.loanStatus === "Active" ? "green" : "gray",
-                        fontWeight: 600,
-                    }}
-                >
-                    {row.loanStatus}
-                </span>
-            ),
-        },
-
-        {
-            title: "Action",
-            render: (row) => (
-                <button
-                    className="btn btn-primary btn-sm"
-                    onClick={() => openLoanModal(row)}
-                >
-                    Pay
-                </button>
-            ),
-        },
-    ];
+    /* ===========================
+       JSX (STRUCTURE KEPT)
+    =========================== */
 
     return (
-        <div>
+        <div className="loan-payout-page">
             <Header />
             <SidePanel />
 
             <div className="page_container">
                 <div className={sideBarCollapse ? "main_content" : "main_content collapsed"}>
-                    <div className="Summary_card">
-                        <div className="welcome_text">
-                            <span>Payments</span>
+                    <div className="loan-page">
+                        <div className="loan-header">
+                            <h2>Loan Payout</h2>
                         </div>
 
+                        {/* FILTERS */}
+                        <div className="loan-filter-card">
+                            <div className="loan-filter-grid">
+                                <div className="filter-field">
+                                    <label>From Date</label>
+                                    <DatePicker
+                                        selected={startDate}
+                                        onChange={setStartDate}
+                                        placeholderText="Select start date"
+                                        className="filter-input"
+                                        dateFormat="dd-MM-yyyy"
+                                    />
+                                </div>
+
+                                <div className="filter-field">
+                                    <label>To Date</label>
+                                    <DatePicker
+                                        selected={endDate}
+                                        onChange={setEndDate}
+                                        placeholderText="Select end date"
+                                        className="filter-input"
+                                        minDate={startDate}
+                                        dateFormat="dd-MM-yyyy"
+                                    />
+                                </div>
+
+                                <div className="filter-field">
+                                    <label>Account Type</label>
+                                    <Select
+                                        options={accountTypeOptions}
+                                        value={accountType}
+                                        onChange={setAccountType}
+                                        placeholder="Select account type"
+                                        classNamePrefix="react-select"
+                                    />
+                                </div>
+
+                                <div className="filter-field">
+                                    <label>Payment Status</label>
+                                    <Select
+                                        options={paymentStatusOptions}
+                                        value={paymentStatus}
+                                        onChange={setPaymentStatus}
+                                        placeholder="Select payment status"
+                                        classNamePrefix="react-select"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+
                         <MaterialTable
-                            title=""
+                            key={tableKey}
+                            style={{ marginTop: "30px" }}
                             columns={columns}
-                            tableRef={tableRef}
-                            data={() => fetchTableData()}
+                            data={loanData}
                             options={{
                                 ...TableOptions(),
-                                search: true,
-                                toolbar: true,
+                                search: false,
+                                toolbar: false,
+                                selection: true,
+                            }}
+                            onSelectionChange={handleSelectionChange}
+                            cellEditable={{
+                                isCellEditable: () => true,
+                                onCellEditApproved: (newVal, _, row, col) =>
+                                    new Promise((resolve) => {
+                                        const updated = [...loanData];
+                                        const idx = updated.findIndex(
+                                            (r) => r.scheduleId === row.scheduleId
+                                        );
+                                        updated[idx][col.field] = newVal;
+                                        setLoanData(updated);
+                                        resolve();
+                                    }),
                             }}
                         />
+
+                        {loanIds.length > 0 && (
+                            <button className="declare_btn" onClick={openLoanPayout}>
+                                Payout Loan
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
 
-            {/* ---------------- PAYMENT MODAL (CONFIRM STYLE) ---------------- */}
-            <Modal
-                centered
-                show={loanModalOpen}
-                onHide={closeLoanModal}
-                dialogClassName="confirmModal"
-            >
-                <div className="confirmModalContainer">
-                    <div className="confirmHeader">
-                        <span>Confirm Payment</span>
-                        <AiOutlineClose onClick={closeLoanModal} />
-                    </div>
+            {/* MODAL */}
+            <Modal centered show={loanModalOpen}>
+                <Modal.Header>
+                    <span>Loan Payout</span>
+                    <AiOutlineClose onClick={closeLoanModal} />
+                </Modal.Header>
+                <Modal.Body>
+                    <DatePicker
+                        selected={payoutDate}
+                        onChange={setPayoutDate}
+                        className="input_box"
+                        placeholderText="Payment Date"
+                    />
 
-                    <div className="confirmBody">
-                        <p className="confirmTitle">
-                            Proceed with loan payment?
-                        </p>
+                    <select
+                        className="input_box"
+                        value={modeOfPayment}
+                        onChange={(e) => setModeofPayment(e.target.value)}
+                    >
+                        <option value="">Select Mode Of Payment</option>
+                        {modeOfPaymentList.map((m, i) => (
+                            <option key={i} value={m}>
+                                {m}
+                            </option>
+                        ))}
+                    </select>
 
-                        <p className="confirmDesc">
-                            Loan No: <strong>{selectedLoan?.loanNumber}</strong>
-                        </p>
+                    <input
+                        className="input_box"
+                        placeholder="Transaction Number"
+                        value={transactionNumber}
+                        onChange={(e) => setTransactionNumber(e.target.value)}
+                    />
 
-                        <label>Payment Type</label>
-                        <select
-                            className="form-control"
-                            value={paymentType}
-                            onChange={(e) => setPaymentType(e.target.value)}
-                        >
-                            <option value="">Select</option>
-                            <option value="PartPayment">Part Payment</option>
-                            <option value="FORECLOSURE">Foreclosure</option>
-                        </select>
-
-                        {paymentType === "PartPayment" && (
-                            <>
-                                <label>Adjustment Type</label>
-                                <select
-                                    className="form-control"
-                                    value={adjustmentType}
-                                    onChange={(e) => setAdjustmentType(e.target.value)}
-                                >
-                                    <option value="">Select</option>
-                                    <option value="REDUCE_TENURE">Reduce Tenure</option>
-                                    <option value="REDUCE EMI">Reduce EMI</option>
-                                </select>
-
-                                <label>Amount</label>
-                                <input
-                                    type="number"
-                                    className="form-control"
-                                    placeholder="Enter amount"
-                                    value={amount}
-                                    onChange={(e) => setAmount(e.target.value)}
-                                />
-                            </>
-                        )}
-                    </div>
-
-                    <div className="confirmFooter">
-                        <button className="btnCancel" onClick={closeLoanModal}>
-                            Cancel
-                        </button>
-                        <button className="btnConfirm" onClick={savePayment}>
-                            Yes, Proceed
-                        </button>
-                    </div>
-                </div>
+                    <textarea
+                        className="input_box"
+                        placeholder="Notes"
+                        onChange={(e) => setPayoutMsg(e.target.value)}
+                    />
+                </Modal.Body>
+                <Modal.Footer>
+                    <button onClick={closeLoanModal}>Cancel</button>
+                    <button onClick={saveLoanPayout}>Submit</button>
+                </Modal.Footer>
             </Modal>
+
+            <Alert
+                title={alertTitle}
+                msg={alertMsg}
+                open={userAlert}
+                type={alertType}
+                onClose={alertClose}
+                onConfirm={alertConfirm}
+            />
         </div>
     );
 };
 
-export default Payments;
+export default LoanPayout;
