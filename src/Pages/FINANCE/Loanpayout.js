@@ -1,407 +1,406 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Header from "../components/Header";
 import SidePanel from "../components/SidePanel";
 import { useSidebar } from "../components/SidebarContext";
 import { useAppContext } from "../components/AppProvider";
-import Select from "react-select";
 import MaterialTable from "@material-table/core";
+import Select from "react-select";
+import { Row, Col, Button } from "react-bootstrap";
 import TableOptions from "../components/TableOptions";
-import DatePicker from "react-datepicker";
-import "./LoanPayout.css";
-import moment from "moment";
-import { AiOutlineClose } from "react-icons/ai";
-import { Modal } from "react-bootstrap";
-import Alert from "../components/Alert";
-
-/* ===========================
-   HARD CODED FILTER OPTIONS
-=========================== */
-
-const accountTypeOptions = [
-    { value: "COMPANY", label: "Company" },
-    { value: "INDIVIDUAL", label: "Individual" },
-    { value: "BANK", label: "Bank" },
-    { value: "NBFC", label: "NBFC" },
-];
-
-const paymentStatusOptions = [
-    { value: "SUCCESS", label: "Success" },
-    { value: "PENDING", label: "Pending" },
-];
 
 const LoanPayout = () => {
-    const { PostApi } = useAppContext();
     const { sideBarCollapse } = useSidebar();
-    const [token] = useState(localStorage.getItem("token"));
+    const { PostApi } = useAppContext();
 
-    const headers = {
+    const token = localStorage.getItem("token");
+
+    const jsonHeaders = {
         Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
     };
 
-    /* ===========================
-       FILTER STATES (REPLACED)
-    =========================== */
+    const formHeaders = {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+    };
+    const formatDate = (date) => {
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, "0");
+        const dd = String(date.getDate()).padStart(2, "0");
+        return `${yyyy}-${mm}-${dd}`;
+    };
 
-    const [startDate, setStartDate] = useState(null);
-    const [endDate, setEndDate] = useState(null);
-    const [accountType, setAccountType] = useState(null);
+    /* ---------------- Filters ---------------- */
     const [paymentStatus, setPaymentStatus] = useState(null);
+    const [accountType, setAccountType] = useState(null);
+    const [fromDate, setFromDate] = useState("");
+    const [toDate, setToDate] = useState("");
 
-    /* ===========================
-       DATA STATES (UNCHANGED)
-    =========================== */
+    /* ---------------- Table ---------------- */
+    const [data, setData] = useState([]);
+    const [loading, setLoading] = useState(false);
 
-    const [loanData, setLoanData] = useState([]);
-    const [loanIds, setLoanIds] = useState([]);
+    /* ---------------- Selection ---------------- */
+    const [selectedIds, setSelectedIds] = useState([]);
 
-    const [payoutDate, setPayoutDate] = useState(null);
-    const [modeOfPayment, setModeofPayment] = useState("");
-    const [payoutMsg, setPayoutMsg] = useState("");
-    const [transactionNumber, setTransactionNumber] = useState("");
+    /* ---------------- Inline form ---------------- */
+    const [rowForms, setRowForms] = useState({});
+    const [paymentModeOptions, setPaymentModeOptions] = useState([]);
 
-    const [loanModalOpen, setLoanModalOpen] = useState(false);
-    const [formErrors, setFormErrors] = useState({});
+    const isApproved = paymentStatus?.value === "APPROVED";
+    const isNotPaid = paymentStatus?.value === "NOT PAID";
+    const isInReview = paymentStatus?.value === "IN REVIEW"; // ✅ Correct for API
 
-    const [userAlert, setUserAlert] = useState(false);
-    const [alertMsg, setAlertMsg] = useState("");
-    const [alertType, setAlertType] = useState("");
-    const [alertTitle, setAlertTitle] = useState("");
-    const [alertConfirm, setAlertConfirm] = useState(() => null);
-    const [alertClose, setAlertClose] = useState(() => null);
+    /* ---------------- Dropdown options ---------------- */
+    const paymentStatusOptions = useMemo(
+        () => [
+            { value: "PAID", label: "PAID" },
+            { value: "IN REVIEW", label: "IN REVIEW" }, // ✅ space matches API
+            { value: "APPROVED", label: "APPROVED" },
+            { value: "NOT PAID", label: "NOT PAID" },
+            { value: "REJECTED", label: "REJECTED" },
+        ],
+        []
+    );
 
-    const [tableKey, setTableKey] = useState(0);
-    const [modeOfPaymentList, setModeOfPaymentList] = useState([]);
+    const accountTypeOptions = useMemo(
+        () => [
+            { value: "COMPANY", label: "COMPANY" },
+            { value: "INDIVIDUAL", label: "INDIVIDUAL" },
+            { value: "BANK", label: "BANK" },
+        ],
+        []
+    );
 
-    /* ===========================
-       FETCH LOAN DATA (NEW API)
-    =========================== */
-
+    /* ---------------- Fetch payment modes ---------------- */
     useEffect(() => {
-        if (!startDate || !endDate || !accountType || !paymentStatus) return;
-
-        const formData = new URLSearchParams();
-        formData.append("fromDate", moment(startDate).format("YYYY-MM-DD"));
-        formData.append("toDate", moment(endDate).format("YYYY-MM-DD"));
-        formData.append("paymentStatus", paymentStatus.value);
-        formData.append("accountType", accountType.value);
-        formData.append("page", 0);
-        formData.append("size", 5);
-
-        PostApi("POST", "/user/repayment-schedules", formData, {
-            ...headers,
-            "Content-Type": "application/x-www-form-urlencoded",
-        })
+        PostApi("POST", "/userbond/modeOfPayment", {}, jsonHeaders)
             .then((res) => {
-                setLoanData(
-                    (res.data.content || []).map((item) => ({
-                        ...item,
-                        id: item.scheduleId,
-                        utrNo: item.utrNo || "Enter the transaction no",
+                setPaymentModeOptions(
+                    (res?.data || []).map((m) => ({
+                        value: m.name || m,
+                        label: m.name || m,
                     }))
                 );
-                setTableKey((k) => k + 1);
-            })
-            .catch(() => setLoanData([]));
-    }, [startDate, endDate, accountType, paymentStatus]);
-
-    /* ===========================
-       TABLE COLUMNS (KEPT)
-    =========================== */
-
-    const columns = [
-        { title: "Loaner Name", field: "loanerName", editable: "never" },
-        { title: "Loan Number", field: "loanNumber", editable: "never" },
-        { title: "Installment ID", field: "installmentId", editable: "never" },
-        {
-            title: "Due Date",
-            render: (row) => moment(row.dueDate).format("DD-MM-YYYY"),
-            editable: "never",
-        },
-        {
-            title: "Amount",
-            render: (row) =>
-                `₹ ${row.actualAmountToPay.toLocaleString("en-IN")}`,
-            editable: "never",
-        },
-        {
-            title: (
-                <span>
-                    Transaction No <span className="required_star">*</span>
-                </span>
-            ),
-            field: "utrNo",
-            editComponent: (props) => (
-                <input
-                    value={
-                        props.value !== "Enter the transaction no" ? props.value : ""
-                    }
-                    onChange={(e) => props.onChange(e.target.value)}
-                    placeholder="Enter transaction no"
-                />
-            ),
-        },
-    ];
-
-    /* ===========================
-       SELECTION (UNCHANGED)
-    =========================== */
-
-    const handleSelectionChange = (rows) => {
-        setLoanIds(
-            rows.map((row) => ({
-                scheduleId: row.scheduleId,
-                utrNo: row.utrNo,
-            }))
-        );
-    };
-
-    /* ===========================
-       OPEN MODAL (UNCHANGED)
-    =========================== */
-
-    const openLoanPayout = () => {
-        if (loanIds.length === 0) {
-            setUserAlert(true);
-            setAlertTitle("Info");
-            setAlertMsg("Please select at least one record.");
-            setAlertType("error");
-            setAlertClose(() => () => setUserAlert(false));
-            return;
-        }
-
-        const invalidIndex = loanIds.findIndex(
-            (r) =>
-                !r.utrNo ||
-                r.utrNo.trim() === "" ||
-                r.utrNo === "Enter the transaction no"
-        );
-
-        if (invalidIndex !== -1) {
-            setUserAlert(true);
-            setAlertTitle("Info");
-            setAlertMsg(
-                `Please enter a valid transaction number for selected row ${invalidIndex + 1}`
-            );
-            setAlertType("error");
-            setAlertClose(() => () => setUserAlert(false));
-            return;
-        }
-
-        // ✅ All rows valid → open modal
-        getModeofPayment();
-        setLoanModalOpen(true);
-    };
-
-    const closeLoanModal = () => {
-        setLoanModalOpen(false);
-        setPayoutDate(null);
-        setModeofPayment("");
-        setTransactionNumber("");
-        setFormErrors({});
-    };
-
-    /* ===========================
-       SUBMIT PAYOUT (NEW API)
-    =========================== */
-
-    const saveLoanPayout = () => {
-        const errors = {};
-        if (!payoutDate) errors.payoutDate = "Select Payment Date";
-        if (!modeOfPayment) errors.modeOfPayment = "Select Mode of Payment";
-        if (!transactionNumber)
-            errors.transactionNumber = "Enter Transaction Number";
-
-        setFormErrors(errors);
-        if (Object.keys(errors).length) return;
-
-        const payload = {
-            scheduleIds: loanIds.map((i) => i.scheduleId),
-            paymentDate: moment(payoutDate).format("YYYY-MM-DD"),
-            modeOfPayment,
-            transactionNumber,
-            notes: payoutMsg,
-        };
-
-        PostApi("POST", "/user/installments/success", payload, headers)
-            .then(() => {
-                setUserAlert(true);
-                setAlertTitle("Success");
-                setAlertMsg("Loan payout completed successfully");
-                setAlertType("success");
-                setAlertClose(() => () => window.location.reload());
             })
             .catch(() => {
-                setUserAlert(true);
-                setAlertTitle("Error");
-                setAlertMsg("Loan payout failed");
-                setAlertType("error");
+                setPaymentModeOptions([
+                    { value: "UPI", label: "UPI" },
+                    { value: "NEFT", label: "NEFT" },
+                    { value: "IMPS", label: "IMPS" },
+                ]);
             });
-    };
+    }, []);
 
-    const getModeofPayment = () => {
-        PostApi("POST", "/userbond/modeOfPayment", null, headers).then((res) =>
-            setModeOfPaymentList(res.data)
+    useEffect(() => {
+        const today = new Date();
+        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+        setFromDate(formatDate(firstDayOfMonth)); // this month first date
+        setToDate(formatDate(today));             // today date
+
+        setPaymentStatus({ value: "NOT PAID", label: "NOT PAID" });
+        setAccountType({ value: "INDIVIDUAL", label: "INDIVIDUAL" });
+    }, []);
+
+
+    /* ---------------- Fetch payouts ---------------- */
+    useEffect(() => {
+        if (!paymentStatus || !accountType || !fromDate || !toDate) return;
+
+        setLoading(true);
+
+        const payload = new URLSearchParams();
+        payload.append("fromDate", fromDate);
+        payload.append("toDate", toDate);
+        payload.append("paymentStatus", paymentStatus.value);
+        payload.append("accountType", accountType.value);
+
+        PostApi("POST", "/user/repayment-schedules", payload, formHeaders)
+            .then((res) => {
+                console.log("API response:", res?.data); // ✅ debug
+                const content = res?.data?.content || [];
+                setData(content);
+                setSelectedIds([]);
+
+                // Initialize inline forms only for approved
+                if (isApproved) {
+                    setRowForms((prev) => {
+                        const updated = { ...prev };
+                        content.forEach((row) => {
+                            if (!updated[row.scheduleId]) {
+                                updated[row.scheduleId] = {
+                                    transactionNumber: "",
+                                    paymentMode: null,
+                                    paymentDate: "",
+                                    notes: "",
+                                };
+                            }
+                        });
+                        return updated;
+                    });
+                }
+            })
+            .finally(() => setLoading(false));
+    }, [paymentStatus, accountType, fromDate, toDate]);
+
+    /* ---------------- Columns ---------------- */
+    const columns = useMemo(
+        () => [
+            {
+                title: "",
+                render: (row) => {
+                    if (isApproved || isNotPaid) {
+                        return (
+                            <input
+                                type="checkbox"
+                                checked={selectedIds.includes(row.scheduleId)}
+                                onClick={(e) => e.stopPropagation()}
+                                onChange={(e) =>
+                                    setSelectedIds((prev) =>
+                                        e.target.checked
+                                            ? [...prev, row.scheduleId]
+                                            : prev.filter((id) => id !== row.scheduleId)
+                                    )
+                                }
+                            />
+                        );
+                    }
+                    return null; // ✅ no checkbox for IN REVIEW
+                },
+            },
+            { title: "Loaner Name", field: "loanerName" },
+            { title: "Loan Number", field: "loanNumber" },
+            { title: "Installment ID", field: "installmentId" },
+            { title: "Due Date", field: "dueDate" },
+            {
+                title: "Status",
+                render: (row) => (
+                    <strong style={{ color: isInReview ? "blue" : "orange" }}>
+                        {row.paymentStatus}
+                    </strong>
+                ),
+            },
+        ],
+        [isApproved, isNotPaid, isInReview, selectedIds]
+    );
+
+    /* ---------------- Detail panel for approved only ---------------- */
+    const detailPanel = useCallback(
+        (row) => {
+            if (!isApproved) return null;
+            const r = row.rowData;
+            return (
+                <div className="p-3 bg-light">
+                    <Row className="g-3 mb-3">
+                        <Col md={3}>
+                            <input
+                                className="form-control"
+                                placeholder="Transaction No"
+                                value={rowForms[r.scheduleId]?.transactionNumber || ""}
+                                onChange={(e) =>
+                                    setRowForms((p) => ({
+                                        ...p,
+                                        [r.scheduleId]: {
+                                            ...p[r.scheduleId],
+                                            transactionNumber: e.target.value,
+                                        },
+                                    }))
+                                }
+                            />
+                        </Col>
+                        <Col md={3}>
+                            <Select
+                                options={paymentModeOptions}
+                                value={rowForms[r.scheduleId]?.paymentMode || null}
+                                onChange={(v) =>
+                                    setRowForms((p) => ({
+                                        ...p,
+                                        [r.scheduleId]: {
+                                            ...p[r.scheduleId],
+                                            paymentMode: v,
+                                        },
+                                    }))
+                                }
+                            />
+                        </Col>
+                        <Col md={3}>
+                            <input
+                                type="date"
+                                className="form-control"
+                                value={rowForms[r.scheduleId]?.paymentDate || ""}
+                                onChange={(e) =>
+                                    setRowForms((p) => ({
+                                        ...p,
+                                        [r.scheduleId]: {
+                                            ...p[r.scheduleId],
+                                            paymentDate: e.target.value,
+                                        },
+                                    }))
+                                }
+                            />
+                        </Col>
+                        <Col md={3}>
+                            <input
+                                className="form-control"
+                                placeholder="Notes"
+                                value={rowForms[r.scheduleId]?.notes || ""}
+                                onChange={(e) =>
+                                    setRowForms((p) => ({
+                                        ...p,
+                                        [r.scheduleId]: {
+                                            ...p[r.scheduleId],
+                                            notes: e.target.value,
+                                        },
+                                    }))
+                                }
+                            />
+                        </Col>
+                    </Row>
+                </div>
+            );
+        },
+        [rowForms, paymentModeOptions, isApproved]
+    );
+
+    /* ---------------- Bulk payout for approved only ---------------- */
+    const handleBulkPayout = async (latestRowForms) => {
+        const rowsToPayout = data.filter((row) =>
+            selectedIds.includes(row.scheduleId)
         );
+
+        for (let row of rowsToPayout) {
+            const form = latestRowForms[row.scheduleId];
+            if (!form || !form.transactionNumber || !form.paymentMode?.value || !form.paymentDate) {
+                alert(`Please fill all fields for Loan Number: ${row.loanNumber}`);
+                return;
+            }
+        }
+
+        const paymentsPayload = rowsToPayout.map((row) => {
+            const form = latestRowForms[row.scheduleId];
+            return {
+                scheduleId: row.scheduleId,
+                transactionNumber: form.transactionNumber,
+                modeOfPayment: form.paymentMode.value,
+                paymentDate: form.paymentDate,
+                notes: form.notes || "",
+            };
+        });
+
+        await PostApi("POST", "/user/installments/success", { payments: paymentsPayload }, jsonHeaders);
+
+        setData((prev) => prev.filter((row) => !selectedIds.includes(row.scheduleId)));
+        setSelectedIds([]);
     };
 
-    /* ===========================
-       JSX (STRUCTURE KEPT)
-    =========================== */
+    /* ---------------- Submit for approval for not paid only ---------------- */
+    const handleSubmitForApproval = async () => {
+        if (selectedIds.length === 0) return;
+
+        await PostApi(
+            "POST",
+            "/user/installments/submit",
+            selectedIds,
+            jsonHeaders
+        );
+
+        setData((prev) => prev.filter((row) => !selectedIds.includes(row.scheduleId)));
+        setSelectedIds([]);
+    };
+
+    const tableOptions = useMemo(
+        () => ({
+            ...TableOptions(),
+            detailPanelType: "single",
+            selection: false,
+        }),
+        []
+    );
 
     return (
-        <div className="loan-payout-page">
+        <>
             <Header />
             <SidePanel />
 
             <div className="page_container">
                 <div className={sideBarCollapse ? "main_content" : "main_content collapsed"}>
-                    <div className="loan-page">
-                        <div className="loan-header">
-                            <h2>Loan Payout</h2>
-                        </div>
+                    <div className="Summary_card">
+                        <span className="welcome_text">Loan Payout</span>
 
-                        {/* FILTERS */}
-                        <div className="loan-filter-card">
-                            <div className="loan-filter-grid">
-                                <div className="filter-field">
-                                    <label>From Date</label>
-                                    <DatePicker
-                                        selected={startDate}
-                                        onChange={setStartDate}
-                                        placeholderText="Select start date"
-                                        className="filter-input"
-                                        dateFormat="dd-MM-yyyy"
-                                    />
-                                </div>
+                        <Row className="mt-4 g-3">
+                            <Col md={3}>
+                                <Select
+                                    placeholder="Payment Status"
+                                    options={paymentStatusOptions}
+                                    value={paymentStatus}
+                                    onChange={setPaymentStatus}
+                                />
+                            </Col>
 
-                                <div className="filter-field">
-                                    <label>To Date</label>
-                                    <DatePicker
-                                        selected={endDate}
-                                        onChange={setEndDate}
-                                        placeholderText="Select end date"
-                                        className="filter-input"
-                                        minDate={startDate}
-                                        dateFormat="dd-MM-yyyy"
-                                    />
-                                </div>
+                            <Col md={3}>
+                                <Select
+                                    placeholder="Account Type"
+                                    options={accountTypeOptions}
+                                    value={accountType}
+                                    onChange={setAccountType}
+                                />
+                            </Col>
 
-                                <div className="filter-field">
-                                    <label>Account Type</label>
-                                    <Select
-                                        options={accountTypeOptions}
-                                        value={accountType}
-                                        onChange={setAccountType}
-                                        placeholder="Select account type"
-                                        classNamePrefix="react-select"
-                                    />
-                                </div>
+                            <Col md={3}>
+                                <input
+                                    type="date"
+                                    className="form-control"
+                                    value={fromDate}
+                                    onChange={(e) => setFromDate(e.target.value)}
+                                />
+                            </Col>
 
-                                <div className="filter-field">
-                                    <label>Payment Status</label>
-                                    <Select
-                                        options={paymentStatusOptions}
-                                        value={paymentStatus}
-                                        onChange={setPaymentStatus}
-                                        placeholder="Select payment status"
-                                        classNamePrefix="react-select"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
+                            <Col md={3}>
+                                <input
+                                    type="date"
+                                    className="form-control"
+                                    value={toDate}
+                                    onChange={(e) => setToDate(e.target.value)}
+                                />
+                            </Col>
+                        </Row>
 
                         <MaterialTable
-                            key={tableKey}
-                            style={{ marginTop: "30px" }}
                             columns={columns}
-                            data={loanData}
-                            options={{
-                                ...TableOptions(),
-                                search: false,
-                                toolbar: false,
-                                selection: true,
-                            }}
-                            onSelectionChange={handleSelectionChange}
-                            cellEditable={{
-                                isCellEditable: () => true,
-                                onCellEditApproved: (newVal, _, row, col) =>
-                                    new Promise((resolve) => {
-                                        const updated = [...loanData];
-                                        const idx = updated.findIndex(
-                                            (r) => r.scheduleId === row.scheduleId
-                                        );
-                                        updated[idx][col.field] = newVal;
-                                        setLoanData(updated);
-                                        resolve();
-                                    }),
-                            }}
+                            data={data}
+                            isLoading={loading}
+                            options={tableOptions}
+                            detailPanel={detailPanel}
                         />
 
-                        {loanIds.length > 0 && (
-                            <button className="declare_btn" onClick={openLoanPayout}>
-                                Payout Loan
-                            </button>
+                        {isApproved && selectedIds.length > 0 && (
+                            <div className="mt-3">
+                                <Button
+                                    variant="primary"
+                                    className="px-4 fw-semibold"
+                                    onClick={() => handleBulkPayout(JSON.parse(JSON.stringify(rowForms)))}
+                                >
+                                    Payout Loan
+                                </Button>
+                            </div>
+                        )}
+
+                        {isNotPaid && selectedIds.length > 0 && (
+                            <div className="mt-3">
+                                <Button
+                                    variant="primary"
+                                    className="px-4 fw-semibold"
+                                    onClick={handleSubmitForApproval}
+                                >
+                                    Submit for Approval
+                                </Button>
+                            </div>
                         )}
                     </div>
                 </div>
             </div>
-
-            {/* MODAL */}
-            <Modal centered show={loanModalOpen}>
-                <Modal.Header>
-                    <span>Loan Payout</span>
-                    <AiOutlineClose onClick={closeLoanModal} />
-                </Modal.Header>
-                <Modal.Body>
-                    <DatePicker
-                        selected={payoutDate}
-                        onChange={setPayoutDate}
-                        className="input_box"
-                        placeholderText="Payment Date"
-                    />
-
-                    <select
-                        className="input_box"
-                        value={modeOfPayment}
-                        onChange={(e) => setModeofPayment(e.target.value)}
-                    >
-                        <option value="">Select Mode Of Payment</option>
-                        {modeOfPaymentList.map((m, i) => (
-                            <option key={i} value={m}>
-                                {m}
-                            </option>
-                        ))}
-                    </select>
-
-                    <input
-                        className="input_box"
-                        placeholder="Transaction Number"
-                        value={transactionNumber}
-                        onChange={(e) => setTransactionNumber(e.target.value)}
-                    />
-
-                    <textarea
-                        className="input_box"
-                        placeholder="Notes"
-                        onChange={(e) => setPayoutMsg(e.target.value)}
-                    />
-                </Modal.Body>
-                <Modal.Footer>
-                    <button onClick={closeLoanModal}>Cancel</button>
-                    <button onClick={saveLoanPayout}>Submit</button>
-                </Modal.Footer>
-            </Modal>
-
-            <Alert
-                title={alertTitle}
-                msg={alertMsg}
-                open={userAlert}
-                type={alertType}
-                onClose={alertClose}
-                onConfirm={alertConfirm}
-            />
-        </div>
+        </>
     );
 };
 
