@@ -57,6 +57,13 @@ const LoanView = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
+    // Payment Modal States
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [paymentType, setPaymentType] = useState("");
+    const [partPaymentAmount, setPartPaymentAmount] = useState("");
+    const [adjustmentType, setAdjustmentType] = useState("");
+    const [submittingPayment, setSubmittingPayment] = useState(false);
+
 
     useEffect(() => {
         if (activeTab !== "payments") return;
@@ -279,6 +286,48 @@ const LoanView = () => {
         }
     };
 
+    const handlePaymentSubmit = async () => {
+        if (!paymentType) {
+            alert("Please select payment type");
+            return;
+        }
+
+        if (paymentType === "PartPayment" && (!partPaymentAmount || !adjustmentType)) {
+            alert("Please fill all required fields for part payment");
+            return;
+        }
+
+        const payload = paymentType === "PartPayment" 
+            ? {
+                paymentType: "PartPayment",
+                adjustmentType,
+                partPaymentAmount: Number(partPaymentAmount)
+            }
+            : {
+                paymentType: "FORECLOSURE"
+            };
+
+        try {
+            setSubmittingPayment(true);
+            await PostApi(
+                "POST",
+                `/user/payment/${loanId}/submit-payment`,
+                payload,
+                headers
+            );
+            alert("Payment submitted successfully");
+            setShowPaymentModal(false);
+            setPaymentType("");
+            setPartPaymentAmount("");
+            setAdjustmentType("");
+        } catch (err) {
+            console.error(err);
+            alert("Payment submission failed");
+        } finally {
+            setSubmittingPayment(false);
+        }
+    };
+
 
     const handleApprove = async (emi) => {
         try {
@@ -354,9 +403,19 @@ const LoanView = () => {
                         {/* ---------- HEADER ---------- */}
                         <div className="LV_title_header">
                             <h2>Loan Details</h2>
-                            <button className="btn btn-secondary" onClick={() => navigate(-1)}>
-                                ← Back
-                            </button>
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                {activeTab === "payments" && roleId === 4 && (
+                                    <button 
+                                        className="btn btn-primary" 
+                                        onClick={() => setShowPaymentModal(true)}
+                                    >
+                                        Payment
+                                    </button>
+                                )}
+                                <button className="btn btn-secondary" onClick={() => navigate(-1)}>
+                                    ← Back
+                                </button>
+                            </div>
                         </div>
 
                         {/* ---------- TABS ---------- */}
@@ -1007,6 +1066,86 @@ const LoanView = () => {
                             </button>
                         </div>
 
+                    </div>
+                </div>
+            )}
+
+            {/* Payment Modal */}
+            {showPaymentModal && (
+                <div className="payment-modal-backdrop">
+                    <div className="payment-modal">
+                        <div className="payment-modal-header">
+                            <h3>Submit Payment</h3>
+                        </div>
+
+                        <div className="payment-modal-body">
+                            <div className="form-group">
+                                <label>Payment Type *</label>
+                                <select
+                                    value={paymentType}
+                                    onChange={(e) => {
+                                        setPaymentType(e.target.value);
+                                        if (e.target.value !== "PartPayment") {
+                                            setPartPaymentAmount("");
+                                            setAdjustmentType("");
+                                        }
+                                    }}
+                                >
+                                    <option value="">Select Payment Type</option>
+                                    <option value="PartPayment">PartPayment</option>
+                                    <option value="FORECLOSURE">FORECLOSURE</option>
+                                </select>
+                            </div>
+
+                            {paymentType === "PartPayment" && (
+                                <>
+                                    <div className="form-group">
+                                        <label>Part Payment Amount *</label>
+                                        <input
+                                            type="number"
+                                            placeholder="Enter amount"
+                                            value={partPaymentAmount}
+                                            onChange={(e) => setPartPaymentAmount(e.target.value)}
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Adjustment Type *</label>
+                                        <select
+                                            value={adjustmentType}
+                                            onChange={(e) => setAdjustmentType(e.target.value)}
+                                        >
+                                            <option value="">Select Adjustment Type</option>
+                                            <option value="REDUCE TENURE">REDUCE TENURE</option>
+                                            <option value="REDUCE EMI">REDUCE EMI</option>
+                                        </select>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        <div className="payment-modal-footer">
+                            <button
+                                className="btn-outline"
+                                onClick={() => {
+                                    setShowPaymentModal(false);
+                                    setPaymentType("");
+                                    setPartPaymentAmount("");
+                                    setAdjustmentType("");
+                                }}
+                                disabled={submittingPayment}
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                className="btn-primary"
+                                onClick={handlePaymentSubmit}
+                                disabled={submittingPayment}
+                            >
+                                {submittingPayment ? "Submitting..." : "Submit"}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

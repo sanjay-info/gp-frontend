@@ -436,17 +436,60 @@ const SidePanel = () => {
               </SubMenu>
 
               {/* LOANS */}
-              {/* LOANS */}
               <SubMenu
                 label="Loans"
                 icon={<FaHandHoldingDollar />}
                 defaultOpen={
+                  pathname.includes("/AdminLoanIntent") ||
+                  pathname.includes("/IntentView") ||
+                  pathname.includes("/LoanApplications") ||
+                  pathname.includes("/LoanApplicationView") ||
+                  pathname.includes("/AdminLoans") ||
+                  pathname.includes("/LoanView") ||
                   pathname.includes("/LoanPayout") ||
                   pathname.includes("/LoanPayoutView") ||
                   pathname.includes("/Document")
                 }
               >
-                {/* Loan */}
+                <MenuItem
+                  icon={<RiDraftLine />}
+                  className={
+                    pathname === "/AdminLoanIntent" ||
+                      pathname.includes("/IntentView")
+                      ? "active"
+                      : ""
+                  }
+                  onClick={() => navigate("/AdminLoanIntent")}
+                >
+                  Loan Intent
+                </MenuItem>
+
+                <MenuItem
+                  icon={<RiDraftLine />}
+                  className={
+                    pathname === "/LoanApplications" ||
+                      pathname.includes("/LoanApplicationView")
+                      ? "active"
+                      : ""
+                  }
+                  onClick={() => navigate("/LoanApplications")}
+                >
+                  Loan Applications
+                </MenuItem>
+
+                <MenuItem
+                  icon={<PiMoneyLight />}
+                  className={
+                    pathname === "/AdminLoans" ||
+                      pathname.includes("/LoanView")
+                      ? "active"
+                      : ""
+                  }
+                  onClick={() => navigate("/AdminLoans")}
+                >
+                  Loans
+                </MenuItem>
+
                 <MenuItem
                   onClick={() => navigate("/LoanPayout")}
                   className={
@@ -456,18 +499,7 @@ const SidePanel = () => {
                       : ""
                   }
                 >
-                  Loan Payout
-                </MenuItem>
-                <MenuItem
-                  onClick={() => navigate("/Payments")}
-                  className={
-                    pathname === "/Payments" ||
-                      pathname.includes("/Payments")
-                      ? "active"
-                      : ""
-                  }
-                >
-                  Payments
+                  Loan Payment
                 </MenuItem>
 
                 {/* Documents directly under Loans */}

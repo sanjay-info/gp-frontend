@@ -11,10 +11,8 @@ const TableOptions = () => {
         },
         search: true,
         sorting: true,
-        paging: true,
+        paging: false,
         actionsColumnIndex: -1,
-        pageSizeOptions: [5, 10, 20],
-        pageSize: 5,
         draggable: false,
         emptyRowsWhenPaging: false,
     };
