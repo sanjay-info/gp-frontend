@@ -154,16 +154,17 @@ const LoanPayout = () => {
                         return (
                             <input
                                 type="checkbox"
-                                checked={selectedIds.includes(row.scheduleId)}
+                                checked={selectedIds.some(r => r.scheduleId === row.scheduleId)}
                                 onClick={(e) => e.stopPropagation()}
                                 onChange={(e) =>
                                     setSelectedIds((prev) =>
                                         e.target.checked
-                                            ? [...prev, row.scheduleId]
-                                            : prev.filter((id) => id !== row.scheduleId)
+                                            ? [...prev, row]
+                                            : prev.filter(r => r.scheduleId !== row.scheduleId)
                                     )
                                 }
                             />
+
                         );
                     }
                     return null; // ✅ no checkbox for IN REVIEW
@@ -297,15 +298,27 @@ const LoanPayout = () => {
     /* ---------------- Submit for approval for not paid only ---------------- */
     const handleSubmitForApproval = async () => {
         if (selectedIds.length === 0) return;
+        console.log(selectedIds)
+        const isInstallment =
+            selectedIds.loanPaymentType === "INSTALLMENT";
+
+        const apiUrl = isInstallment
+            ? `/user/installments/submit`
+            : `/user/payments/bulk-submit`;
 
         await PostApi(
             "POST",
-            "/user/installments/submit",
-            selectedIds,
+            apiUrl,
+            selectedIds.map(row => row.scheduleId),
             jsonHeaders
         );
 
-        setData((prev) => prev.filter((row) => !selectedIds.includes(row.scheduleId)));
+        setData((prev) =>
+            prev.filter(
+                (row) => !selectedIds.some(r => r.scheduleId === row.scheduleId)
+            )
+        );
+
         setSelectedIds([]);
     };
 
@@ -369,10 +382,12 @@ const LoanPayout = () => {
                         <MaterialTable
                             columns={columns}
                             data={data}
+                            title=""
                             isLoading={loading}
                             options={tableOptions}
-                            detailPanel={detailPanel}
+                            detailPanel={isApproved ? detailPanel : undefined}
                         />
+
 
                         {isApproved && selectedIds.length > 0 && (
                             <div className="mt-3">

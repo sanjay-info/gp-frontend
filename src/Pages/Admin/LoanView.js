@@ -192,13 +192,21 @@ const LoanView = () => {
             notes: selectedInstallment.notes,
         };
 
+        const isInstallment =
+            selectedInstallment.loanPaymentType === "INSTALLMENT";
+
+        const apiUrl = isInstallment
+            ? `/user/installment/${selectedInstallment.paymentId}/success`
+            : `/user/payment/${selectedInstallment.paymentId}/success`;
+
+
         try {
             setLoadingPay(true);
 
             await PostApi(
                 "POST",
-                `/user/installment/${selectedInstallment.paymentId}/success`,
-                payload, // ✅ derived from selectedInstallment
+                apiUrl,
+                payload,
                 headers
             );
 
@@ -258,10 +266,17 @@ const LoanView = () => {
 
 
     const handleSubmitApproval = async (emi) => {
+        const isInstallment =
+            emi.loanPaymentType === "INSTALLMENT";
+        const apiUrl = isInstallment
+            ? `/user/installment/${emi.paymentId}/submit`
+            : `/user/payment/${emi.paymentId}/submit`;
+
+
         try {
             await PostApi(
                 "POST",
-                `/user/installment/${emi.paymentId}/submit`,
+                apiUrl,
                 null,
                 headers
             );
@@ -297,7 +312,7 @@ const LoanView = () => {
             return;
         }
 
-        const payload = paymentType === "PartPayment" 
+        const payload = paymentType === "PartPayment"
             ? {
                 paymentType: "PartPayment",
                 adjustmentType,
@@ -405,8 +420,8 @@ const LoanView = () => {
                             <h2>Loan Details</h2>
                             <div style={{ display: 'flex', gap: '10px' }}>
                                 {activeTab === "payments" && roleId === 4 && (
-                                    <button 
-                                        className="btn btn-primary" 
+                                    <button
+                                        className="btn btn-primary"
                                         onClick={() => setShowPaymentModal(true)}
                                     >
                                         Payment
