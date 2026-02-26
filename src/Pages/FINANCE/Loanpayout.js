@@ -49,13 +49,25 @@ const LoanPayout = () => {
 
     const isApproved = paymentStatus?.value === "APPROVED";
     const isNotPaid = paymentStatus?.value === "NOT PAID";
-    const isInReview = paymentStatus?.value === "IN REVIEW"; // ✅ Correct for API
+    const isInReview = paymentStatus?.value === "INREVIEW"; // ✅ Correct for API
+    const [loanPaymentType, setLoanPaymentType] = useState(null);
+    const loanPaymentTypeOptions = useMemo(
+        () => [
+            { value: "INSTALLMENT", label: "Installment" },
+            { value: "PartPayment", label: "Part Payment" },
+            { value: "Foreclosure", label: "Foreclosure" },
+        ],
+        []
+    );
+
+
+
 
     /* ---------------- Dropdown options ---------------- */
     const paymentStatusOptions = useMemo(
         () => [
             { value: "PAID", label: "PAID" },
-            { value: "IN REVIEW", label: "IN REVIEW" }, // ✅ space matches API
+            { value: "INREVIEW", label: "IN REVIEW" }, // ✅ space matches API
             { value: "APPROVED", label: "APPROVED" },
             { value: "NOT PAID", label: "NOT PAID" },
             { value: "REJECTED", label: "REJECTED" },
@@ -65,9 +77,9 @@ const LoanPayout = () => {
 
     const accountTypeOptions = useMemo(
         () => [
-            { value: "COMPANY", label: "COMPANY" },
-            { value: "INDIVIDUAL", label: "INDIVIDUAL" },
-            { value: "BANK", label: "BANK" },
+            { value: "Company", label: "COMPANY" },
+            { value: "Individual", label: "INDIVIDUAL" },
+            { value: "Bank", label: "Bank" },
         ],
         []
     );
@@ -96,40 +108,51 @@ const LoanPayout = () => {
         const today = new Date();
         const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
-        setFromDate(formatDate(firstDayOfMonth)); // this month first date
-        setToDate(formatDate(today));             // today date
+        setFromDate(formatDate(firstDayOfMonth));
+        setToDate(formatDate(today));
 
         setPaymentStatus({ value: "NOT PAID", label: "NOT PAID" });
-        setAccountType({ value: "INDIVIDUAL", label: "INDIVIDUAL" });
+        setAccountType({ value: "Individual", label: "INDIVIDUAL" });
+        setLoanPaymentType({ value: "INSTALLMENT", label: "INSTALLMENT" });
     }, []);
 
 
-    /* ---------------- Fetch payouts ---------------- */
     useEffect(() => {
-        if (!paymentStatus || !accountType || !fromDate || !toDate) return;
+        if (!paymentStatus || !accountType || !loanPaymentType || !fromDate || !toDate) return;
 
         setLoading(true);
 
-        const payload = new URLSearchParams();
-        payload.append("fromDate", fromDate);
-        payload.append("toDate", toDate);
-        payload.append("paymentStatus", paymentStatus.value);
-        payload.append("accountType", accountType.value);
+        const body = new URLSearchParams();
+        body.append("fromDate", fromDate);
+        body.append("toDate", toDate);
+        body.append("paymentStatus", paymentStatus.value);       // "NOT PAID"
+        body.append("loanPaymentType", loanPaymentType.value);   // INSTALLMENT / PART_PAYMENT / etc.
+        body.append("accountType", accountType.value);
+        body.append("page", 0);
+        body.append("size", 5);
 
-        PostApi("POST", "/user/repayment-schedules", payload, formHeaders)
+        PostApi(
+            "POST",
+            "/user/loan-paymentdetails",
+            body,
+            {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/x-www-form-urlencoded",
+            }
+        )
             .then((res) => {
-                console.log("API response:", res?.data); // ✅ debug
+                console.log("API response:", res?.data);
+
                 const content = res?.data?.content || [];
                 setData(content);
                 setSelectedIds([]);
 
-                // Initialize inline forms only for approved
                 if (isApproved) {
                     setRowForms((prev) => {
                         const updated = { ...prev };
                         content.forEach((row) => {
-                            if (!updated[row.scheduleId]) {
-                                updated[row.scheduleId] = {
+                            if (!updated[row.paymentId]) {
+                                updated[row.paymentId] = {
                                     transactionNumber: "",
                                     paymentMode: null,
                                     paymentDate: "",
@@ -142,49 +165,113 @@ const LoanPayout = () => {
                 }
             })
             .finally(() => setLoading(false));
-    }, [paymentStatus, accountType, fromDate, toDate]);
+    }, [paymentStatus, accountType, loanPaymentType, fromDate, toDate]);
+
+
+    const getVisibleColumns = (columns, data) => {
+        return columns.filter(col => {
+            if (!col.field) return true; // keep action/render-only columns
+
+            return data.some(row =>
+                row[col.field] !== null &&
+                row[col.field] !== undefined &&
+                row[col.field] !== ""
+            );
+        });
+    };
 
     /* ---------------- Columns ---------------- */
     const columns = useMemo(
         () => [
             {
                 title: "",
-                render: (row) => {
-                    if (isApproved || isNotPaid) {
-                        return (
-                            <input
-                                type="checkbox"
-                                checked={selectedIds.some(r => r.scheduleId === row.scheduleId)}
-                                onClick={(e) => e.stopPropagation()}
-                                onChange={(e) =>
-                                    setSelectedIds((prev) =>
-                                        e.target.checked
-                                            ? [...prev, row]
-                                            : prev.filter(r => r.scheduleId !== row.scheduleId)
-                                    )
-                                }
-                            />
-
-                        );
-                    }
-                    return null; // ✅ no checkbox for IN REVIEW
+                width: "44px",
+                sorting: false,
+                searchable: false,
+                cellStyle: {
+                    padding: "0 6px",
+                    textAlign: "center",
                 },
+                headerStyle: {
+                    padding: "0 6px",
+                },
+                render: (row) =>
+                    (isApproved || isNotPaid) && (
+                        <input
+                            type="checkbox"
+                            style={{ transform: "scale(0.85)" }}
+                            checked={selectedIds.some(
+                                (r) => r.paymentId === row.paymentId
+                            )}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) =>
+                                setSelectedIds((prev) =>
+                                    e.target.checked
+                                        ? [...prev, row] // ✅ store whole row
+                                        : prev.filter(
+                                            (r) => r.paymentId !== row.paymentId
+                                        )
+                                )
+                            }
+                        />
+                    ),
+
             },
-            { title: "Loaner Name", field: "loanerName" },
-            { title: "Loan Number", field: "loanNumber" },
+
             { title: "Installment ID", field: "installmentId" },
-            { title: "Due Date", field: "dueDate" },
+
+            {
+                title: "Installment Type",
+                field: "loanPaymentType", // INSTALLMENT
+            },
+
+            {
+                title: "Due Date",
+                field: "dueDate",
+                render: (row) => new Date(row.dueDate).toLocaleDateString(),
+            },
+
+            {
+                title: "Installment Amount",
+                field: "installmentAmount",
+                render: (row) =>
+                    row.installmentAmount.toLocaleString("en-IN"),
+            },
+
+            {
+                title: "Actual Amount To Pay",
+                field: "actualAmountToPay",
+                render: (row) => (
+                    <strong>
+                        {row.actualAmountToPay?.toLocaleString("en-IN")}
+                    </strong>
+                ),
+            },
+
             {
                 title: "Status",
                 render: (row) => (
-                    <strong style={{ color: isInReview ? "blue" : "orange" }}>
+                    <strong
+                        style={{
+                            color:
+                                row.paymentStatus === "NOT PAID"
+                                    ? "orange"
+                                    : row.paymentStatus === "PAID"
+                                        ? "green"
+                                        : "blue",
+                        }}
+                    >
                         {row.paymentStatus}
                     </strong>
                 ),
             },
         ],
-        [isApproved, isNotPaid, isInReview, selectedIds]
+        [isApproved, isNotPaid, selectedIds]
     );
+    const visibleColumns = useMemo(() => {
+        return getVisibleColumns(columns, data);
+    }, [columns, data]);
+
 
     /* ---------------- Detail panel for approved only ---------------- */
     const detailPanel = useCallback(
@@ -198,12 +285,12 @@ const LoanPayout = () => {
                             <input
                                 className="form-control"
                                 placeholder="Transaction No"
-                                value={rowForms[r.scheduleId]?.transactionNumber || ""}
+                                value={rowForms[r.paymentId]?.transactionNumber || ""}
                                 onChange={(e) =>
                                     setRowForms((p) => ({
                                         ...p,
-                                        [r.scheduleId]: {
-                                            ...p[r.scheduleId],
+                                        [r.paymentId]: {
+                                            ...p[r.paymentId],
                                             transactionNumber: e.target.value,
                                         },
                                     }))
@@ -213,12 +300,12 @@ const LoanPayout = () => {
                         <Col md={3}>
                             <Select
                                 options={paymentModeOptions}
-                                value={rowForms[r.scheduleId]?.paymentMode || null}
+                                value={rowForms[r.paymentId]?.paymentMode || null}
                                 onChange={(v) =>
                                     setRowForms((p) => ({
                                         ...p,
-                                        [r.scheduleId]: {
-                                            ...p[r.scheduleId],
+                                        [r.paymentId]: {
+                                            ...p[r.paymentId],
                                             paymentMode: v,
                                         },
                                     }))
@@ -229,12 +316,12 @@ const LoanPayout = () => {
                             <input
                                 type="date"
                                 className="form-control"
-                                value={rowForms[r.scheduleId]?.paymentDate || ""}
+                                value={rowForms[r.paymentId]?.paymentDate || ""}
                                 onChange={(e) =>
                                     setRowForms((p) => ({
                                         ...p,
-                                        [r.scheduleId]: {
-                                            ...p[r.scheduleId],
+                                        [r.paymentId]: {
+                                            ...p[r.paymentId],
                                             paymentDate: e.target.value,
                                         },
                                     }))
@@ -245,12 +332,12 @@ const LoanPayout = () => {
                             <input
                                 className="form-control"
                                 placeholder="Notes"
-                                value={rowForms[r.scheduleId]?.notes || ""}
+                                value={rowForms[r.paymentId]?.notes || ""}
                                 onChange={(e) =>
                                     setRowForms((p) => ({
                                         ...p,
-                                        [r.scheduleId]: {
-                                            ...p[r.scheduleId],
+                                        [r.paymentId]: {
+                                            ...p[r.paymentId],
                                             notes: e.target.value,
                                         },
                                     }))
@@ -267,32 +354,78 @@ const LoanPayout = () => {
     /* ---------------- Bulk payout for approved only ---------------- */
     const handleBulkPayout = async (latestRowForms) => {
         const rowsToPayout = data.filter((row) =>
-            selectedIds.includes(row.scheduleId)
+            selectedIds.some((item) => item.paymentId === row.paymentId)
         );
 
+        if (!rowsToPayout.length) {
+            alert("Please select at least one record");
+            return;
+        }
+
+        // Validate all rows before API call
         for (let row of rowsToPayout) {
-            const form = latestRowForms[row.scheduleId];
-            if (!form || !form.transactionNumber || !form.paymentMode?.value || !form.paymentDate) {
+            const form = latestRowForms[row.paymentId];
+
+            if (
+                !form ||
+                !form.transactionNumber ||
+                !form.paymentMode?.value ||
+                !form.paymentDate
+            ) {
                 alert(`Please fill all fields for Loan Number: ${row.loanNumber}`);
                 return;
             }
         }
 
-        const paymentsPayload = rowsToPayout.map((row) => {
-            const form = latestRowForms[row.scheduleId];
-            return {
-                scheduleId: row.scheduleId,
-                transactionNumber: form.transactionNumber,
-                modeOfPayment: form.paymentMode.value,
-                paymentDate: form.paymentDate,
-                notes: form.notes || "",
-            };
-        });
+        try {
+            const isInstallment =
+                selectedIds[0]?.loanPaymentType === "INSTALLMENT"; // ✅ fixed
 
-        await PostApi("POST", "/user/installments/success", { payments: paymentsPayload }, jsonHeaders);
+            const apiUrl = isInstallment
+                ? `/user/installments/success`
+                : `/user/payments/bulk-success`;
 
-        setData((prev) => prev.filter((row) => !selectedIds.includes(row.scheduleId)));
-        setSelectedIds([]);
+            const paymentsPayload = rowsToPayout.map((row) => {
+                const form = latestRowForms[row.paymentId];
+
+                return {
+                    paymentId: row.paymentId,
+                    transactionNumber: form.transactionNumber,
+                    modeOfPayment: form.paymentMode.value,
+                    paymentDate: form.paymentDate,
+                    notes: form.notes || "",
+                };
+            });
+
+            const response = await PostApi(
+                "POST",
+                apiUrl,
+                { payments: paymentsPayload },
+                jsonHeaders
+            );
+
+            // ✅ If status is 200
+            if (response?.status === 200) {
+                alert("Bulk payout completed successfully");
+
+                setData((prev) =>
+                    prev.filter(
+                        (row) =>
+                            !selectedIds.some(
+                                (item) => item.paymentId === row.paymentId
+                            )
+                    )
+                );
+
+                setSelectedIds([]);
+            } else {
+                alert(response?.data?.message || "Bulk payout failed");
+            }
+
+        } catch (error) {
+            console.error(error);
+            alert("Something went wrong while processing payout");
+        }
     };
 
     /* ---------------- Submit for approval for not paid only ---------------- */
@@ -309,13 +442,13 @@ const LoanPayout = () => {
         await PostApi(
             "POST",
             apiUrl,
-            selectedIds.map(row => row.scheduleId),
+            selectedIds.map(row => row.paymentId),
             jsonHeaders
         );
 
         setData((prev) =>
             prev.filter(
-                (row) => !selectedIds.some(r => r.scheduleId === row.scheduleId)
+                (row) => !selectedIds.some(r => r.paymentId === row.paymentId)
             )
         );
 
@@ -341,8 +474,8 @@ const LoanPayout = () => {
                     <div className="Summary_card">
                         <span className="welcome_text">Loan Payout</span>
 
-                        <Row className="mt-4 g-3">
-                            <Col md={3}>
+                        <Row className="mt-4 g-3" style={{ justifyContent: "end", padding: "10px" }}>
+                            <Col md={2}>
                                 <Select
                                     placeholder="Payment Status"
                                     options={paymentStatusOptions}
@@ -351,7 +484,7 @@ const LoanPayout = () => {
                                 />
                             </Col>
 
-                            <Col md={3}>
+                            <Col md={2}>
                                 <Select
                                     placeholder="Account Type"
                                     options={accountTypeOptions}
@@ -360,7 +493,7 @@ const LoanPayout = () => {
                                 />
                             </Col>
 
-                            <Col md={3}>
+                            <Col md={2}>
                                 <input
                                     type="date"
                                     className="form-control"
@@ -369,7 +502,7 @@ const LoanPayout = () => {
                                 />
                             </Col>
 
-                            <Col md={3}>
+                            <Col md={2}>
                                 <input
                                     type="date"
                                     className="form-control"
@@ -377,10 +510,18 @@ const LoanPayout = () => {
                                     onChange={(e) => setToDate(e.target.value)}
                                 />
                             </Col>
+                            <Col md={2}>
+                                <Select
+                                    placeholder="Loan Payment Type"
+                                    options={loanPaymentTypeOptions}
+                                    value={loanPaymentType}
+                                    onChange={setLoanPaymentType}
+                                />
+                            </Col>
                         </Row>
 
                         <MaterialTable
-                            columns={columns}
+                            columns={visibleColumns}
                             data={data}
                             title=""
                             isLoading={loading}

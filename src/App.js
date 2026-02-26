@@ -82,6 +82,7 @@ import DocumentTemplates from './Pages/FINANCE/DocumentTemplate';
 import Documents from './Pages/FINANCE/Document';
 import LoanApprovals from './Pages/GM-Finance/GMFinanceLoan';
 import Payments from './Pages/FINANCE/Payment';
+import LoanIntentApprovals from './Pages/GM-Finance/LoanIntentApprovals';
 
 
 const simplifiedConfig = {
@@ -316,6 +317,9 @@ function App() {
                   : <Login />
               }
             />
+            <Route path="/IntentDetails" element={<IntentDetails />} />
+            <Route path="/IntentApprovals/:status" element={<LoanIntentApprovals />} />
+
 
           </Routes>
         </HashRouter>

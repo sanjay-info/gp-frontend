@@ -6,6 +6,8 @@ import { useAppContext } from "../components/AppProvider";
 import { useNavigate, useParams } from "react-router-dom";
 import "./LoanView.css";
 import { FaCheckCircle, FaTimesCircle, FaEllipsisV } from "react-icons/fa";
+import { set } from "date-fns";
+import Alert from "../components/Alert";
 
 /* ================= UTIL ================= */
 const formatCurrency = (value) =>
@@ -26,6 +28,7 @@ const LoanView = () => {
     const [selectedInstallment, setSelectedInstallment] = useState(null);
     const [loadingPay, setLoadingPay] = useState(false);
     const [disbursements, setDisbursements] = useState([]);
+    const [documents, setDocuments] = useState([])
 
 
     const token = localStorage.getItem("token");
@@ -63,6 +66,11 @@ const LoanView = () => {
     const [partPaymentAmount, setPartPaymentAmount] = useState("");
     const [adjustmentType, setAdjustmentType] = useState("");
     const [submittingPayment, setSubmittingPayment] = useState(false);
+
+    const [showModal, setShowModal] = useState(false);
+    const [modalType, setModalType] = useState('');
+    const [modalMessage, setModalMessage] = useState('');
+    const [documentIdToUpdate, setDocumentIdToUpdate] = useState(null);
 
 
     useEffect(() => {
@@ -132,6 +140,7 @@ const LoanView = () => {
                 setData(res?.data?.loan);
                 setInstallments(res?.data?.installments || []);
                 setDisbursements(res?.data?.disbursements || []);
+                setDocuments(res?.data?.document || []);
             } catch (err) {
                 console.error("Loan fetch failed:", err);
             }
@@ -264,6 +273,41 @@ const LoanView = () => {
         return `${day}-${month}-${year}`;
     };
 
+    const onConfirm = async () => {
+        try {
+            // URL for the PUT request to update the document's 'received' status
+            const apiUrl = `/user/document/${documentIdToUpdate}/received`;
+
+            // Create the payload to toggle the 'received' status
+            const payload = { received: true };
+
+            // Make the API call using PostApi
+            await PostApi("PUT", apiUrl, payload, headers);
+
+            // Update the local state for the document's received status
+            setDocuments(prev =>
+                prev.map(doc =>
+                    doc.documentId === documentIdToUpdate
+                        ? { ...doc, received: true }
+                        : doc
+                )
+            );
+
+            setModalType('success');
+            setModalMessage('Document status updated successfully.');
+        } catch (err) {
+            console.error(err);
+            setModalType('error');
+            setModalMessage('Failed to update document status.');
+        }
+        setShowModal(false);
+    };
+
+    const onCloseModal = () => {
+        setShowModal(false);
+    };
+
+
 
     const handleSubmitApproval = async (emi) => {
         const isInstallment =
@@ -301,6 +345,13 @@ const LoanView = () => {
         }
     };
 
+    const handleDocumentReceivedChange = async (documentId, currentStatus) => {
+        setDocumentIdToUpdate(documentId);
+        setModalType('yesorno');
+        setModalMessage('Are you sure you want to update the received status?');
+        setShowModal(true);
+    };
+
     const handlePaymentSubmit = async () => {
         if (!paymentType) {
             alert("Please select payment type");
@@ -324,20 +375,36 @@ const LoanView = () => {
 
         try {
             setSubmittingPayment(true);
-            await PostApi(
+
+            const response = await PostApi(
                 "POST",
                 `/user/payment/${loanId}/submit-payment`,
                 payload,
                 headers
             );
-            alert("Payment submitted successfully");
-            setShowPaymentModal(false);
-            setPaymentType("");
-            setPartPaymentAmount("");
-            setAdjustmentType("");
+
+            console.log(response);
+
+            // ✅ SUCCESS CASE (HTTP 200)
+            if (response?.status === 200) {
+                alert("Payment submitted successfully");
+
+                setShowPaymentModal(false);
+                setPaymentType("");
+                setPartPaymentAmount("");
+                setAdjustmentType("");
+            } else {
+                alert(response?.data?.message || "Payment submission failed");
+            }
+
         } catch (err) {
             console.error(err);
-            alert("Payment submission failed");
+
+            // ✅ Backend error message (400/500)
+            alert(
+                err?.response?.data?.message ||
+                "Payment submission failed"
+            );
         } finally {
             setSubmittingPayment(false);
         }
@@ -435,7 +502,7 @@ const LoanView = () => {
 
                         {/* ---------- TABS ---------- */}
                         <div className="LV_tabs">
-                            {["summary", "loaner", "schedules", "disbursement", "intent", "payments"].map((tab) => (
+                            {["summary", "loaner", "schedules", "disbursement", "intent", "payments", "document"].map((tab) => (
                                 <div
                                     key={tab}
                                     className={`LV_tab ${activeTab === tab ? "active" : ""}`}
@@ -820,6 +887,52 @@ const LoanView = () => {
                             </div>
                         )}
 
+                        {activeTab === "document" && (
+                            <div className="LV_tab_content">
+                                <div className="LV_card">
+                                    <h4>Document Details</h4>
+
+                                    {documents.length === 0 ? (
+                                        <p style={{ color: "#6b7280" }}>No documents available</p>
+                                    ) : (
+                                        <table className="LV_table">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Document Name</th>
+                                                    <th>Returnable</th>
+                                                    <th>Received</th>
+                                                    <th>Received Date</th>
+                                                    <th>Description</th>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody>
+                                                {documents.map((doc, idx) => (
+                                                    <tr key={doc.documentId}>
+                                                        <td>{idx + 1}</td>
+                                                        <td>{doc.documentName}</td>
+                                                        <td>{doc.returnable ? "Yes" : "No"}</td>
+                                                        <td>
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={doc.received}
+                                                                disabled={doc.received} // Optionally, disable if already received
+                                                                onChange={() => handleDocumentReceivedChange(doc.documentId)}
+                                                            />
+                                                        </td>
+                                                        <td>{doc.receivedDate ? formatDate(doc.receivedDate) : "—"}</td>
+                                                        <td>{doc.description || "—"}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+
 
                         {/* ================= INTENT ================= */}
                         {activeTab === "intent" && (
@@ -1164,7 +1277,14 @@ const LoanView = () => {
                     </div>
                 </div>
             )}
-
+            <Alert
+                title={modalType === 'yesorno' ? 'Confirm Action' : modalType === 'error' ? 'Error' : 'Success'}
+                msg={modalMessage}
+                open={showModal}
+                type={modalType}
+                onClose={onCloseModal}
+                onConfirm={modalType === 'yesorno' ? onConfirm : undefined}
+            />
         </>
     );
 };

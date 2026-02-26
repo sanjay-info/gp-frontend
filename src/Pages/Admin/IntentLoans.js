@@ -6,6 +6,7 @@ import { useAppContext } from "../components/AppProvider";
 import MaterialTable from "@material-table/core";
 import TableOptions from "../components/TableOptions";
 import { useLocation, useNavigate } from "react-router-dom";
+import { Modal, Button, Form } from "react-bootstrap";
 
 const IntentDetails = () => {
     const { PostApi } = useAppContext();
@@ -19,46 +20,118 @@ const IntentDetails = () => {
         Authorization: `Bearer ${token}`,
     };
 
+    const [showModal, setShowModal] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    const [formData, setFormData] = useState({
+        name: "",
+        description: "",
+        requiredAmount: "",
+        generatedAmount: "",
+        pendingAmount: "",
+    });
+
     useEffect(() => {
         if (tableRef.current) {
-            tableRef.current.onQueryChange(); // reload table when route changes
+            tableRef.current.onQueryChange();
         }
     }, [location.pathname]);
 
-    // ---------------- FETCH DATA FUNCTION ----------------
+    // ---------------- FETCH TABLE DATA ----------------
     const fetchTableData = (query) => {
         return new Promise(async (resolve) => {
-            const method = "GET";
-            const url = `/user/loanintent`;
-
             try {
-                const response = await PostApi(method, url, null, headers);
-                console.log(response.status, "response")
+                const response = await PostApi(
+                    "GET",
+                    "/user/loanintent",
+                    null,
+                    headers
+                );
 
                 if (response.status === 200) {
                     const items = response.data || [];
-
                     resolve({
                         data: items,
                         page: 0,
                         totalCount: items.length,
                     });
                 } else {
-                    resolve({
-                        data: [],
-                        page: 0,
-                        totalCount: 0,
-                    });
+                    resolve({ data: [], page: 0, totalCount: 0 });
                 }
             } catch (error) {
                 console.log("Error loading loan intent:", error);
-                resolve({
-                    data: [],
-                    page: 0,
-                    totalCount: 0,
-                });
+                resolve({ data: [], page: 0, totalCount: 0 });
             }
         });
+    };
+
+    // ---------------- HANDLE INPUT CHANGE ----------------
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+
+        let updatedData = { ...formData, [name]: value };
+
+        // Auto calculate pending amount
+        if (name === "requiredAmount" || name === "generatedAmount") {
+            const required = Number(
+                name === "requiredAmount" ? value : updatedData.requiredAmount
+            );
+            const generated = Number(
+                name === "generatedAmount" ? value : updatedData.generatedAmount
+            );
+
+            if (!isNaN(required) && !isNaN(generated)) {
+                updatedData.pendingAmount = required - generated;
+            }
+        }
+
+        setFormData(updatedData);
+    };
+
+    // ---------------- CREATE INTENT ----------------
+    const handleCreateIntent = async () => {
+        if (!formData.name || !formData.requiredAmount) {
+            alert("Name and Required Amount are mandatory");
+            return;
+        }
+
+        try {
+            setLoading(true);
+
+            const payload = {
+                name: formData.name,
+                description: formData.description,
+                requiredAmount: Number(formData.requiredAmount),
+                generatedAmount: Number(formData.generatedAmount) || 0,
+                pendingAmount: Number(formData.pendingAmount) || 0,
+            };
+
+            const response = await PostApi(
+                "POST",
+                "/user/add-loanintent",
+                payload,
+                headers
+            );
+
+            if (response.status === 200 || response.status === 201) {
+                setShowModal(false);
+
+                setFormData({
+                    name: "",
+                    description: "",
+                    requiredAmount: "",
+                    generatedAmount: "",
+                    pendingAmount: "",
+                });
+
+                tableRef.current && tableRef.current.onQueryChange();
+            }
+        } catch (error) {
+            console.log("Create Intent Error:", error);
+            alert("Failed to create intent");
+        } finally {
+            setLoading(false);
+        }
     };
 
     // ---------------- TABLE COLUMNS ----------------
@@ -69,19 +142,22 @@ const IntentDetails = () => {
         {
             title: "Required Amount",
             field: "requiredAmount",
-            render: (row) => `₹ ${row.requiredAmount?.toLocaleString()}`,
+            render: (row) =>
+                `₹ ${row.requiredAmount?.toLocaleString() || 0}`,
         },
 
         {
             title: "Raised",
             field: "generatedAmount",
-            render: (row) => `₹ ${row.generatedAmount?.toLocaleString()}`,
+            render: (row) =>
+                `₹ ${row.generatedAmount?.toLocaleString() || 0}`,
         },
 
         {
             title: "Pending",
             field: "pendingAmount",
-            render: (row) => `₹ ${row.pendingAmount?.toLocaleString()}`,
+            render: (row) =>
+                `₹ ${row.pendingAmount?.toLocaleString() || 0}`,
         },
 
         {
@@ -98,23 +174,27 @@ const IntentDetails = () => {
             title: "Intent Status",
             field: "intentStatus.intentStatus",
             render: (row) => {
+                const status = row.intentStatus?.intentStatus || "";
                 let color = "black";
 
-                if (row.intentStatus.intentStatus === "APPROVED") color = "green";
-                if (row.intentStatus.intentStatus === "REJECTED") color = "red";
-                if (row.intentStatus.intentStatus === "NEEDS REVIEW") color = "orange";
+                if (status === "APPROVED") color = "green";
+                if (status === "REJECTED") color = "red";
+                if (status === "NEEDS REVIEW") color = "orange";
 
-                return <span style={{ color }}>{row.intentStatus.intentStatus}</span>;
+                return <span style={{ color }}>{status}</span>;
             },
         },
 
         {
             title: "Action",
-            field: "action",
             render: (row) => (
                 <button
-                    className="btn btn-primary"
-                    onClick={() => navigate("/IntentView", { state: { id: row.loanIntentId } })}
+                    className="btn btn-primary btn-sm"
+                    onClick={() =>
+                        navigate("/IntentView", {
+                            state: { id: row.loanIntentId },
+                        })
+                    }
                 >
                     View
                 </button>
@@ -122,17 +202,38 @@ const IntentDetails = () => {
         },
     ];
 
-    // ---------------- PAGE UI ----------------
+    // ---------------- UI ----------------
     return (
         <div>
             <Header />
             <SidePanel />
 
             <div className="page_container">
-                <div className={sideBarCollapse ? "main_content" : "main_content collapsed"}>
+                <div
+                    className={
+                        sideBarCollapse
+                            ? "main_content"
+                            : "main_content collapsed"
+                    }
+                >
                     <div className="Summary_card">
                         <div className="welcome_text">
                             <span>Loan Intent Details</span>
+                        </div>
+
+                        {/* CREATE BUTTON */}
+                        <div
+                            style={{
+                                marginBottom: "15px",
+                                textAlign: "right",
+                            }}
+                        >
+                            <button
+                                className="btn btn-success"
+                                onClick={() => setShowModal(true)}
+                            >
+                                + Create Intent
+                            </button>
                         </div>
 
                         <MaterialTable
@@ -149,6 +250,89 @@ const IntentDetails = () => {
                     </div>
                 </div>
             </div>
+
+            {/* ---------------- MODAL ---------------- */}
+            <Modal
+                show={showModal}
+                onHide={() => setShowModal(false)}
+                centered
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>Create Loan Intent</Modal.Title>
+                </Modal.Header>
+
+                <Modal.Body>
+                    <Form>
+                        <Form.Group className="mb-3">
+                            <Form.Label>Name *</Form.Label>
+                            <Form.Control
+                                type="text"
+                                name="name"
+                                value={formData.name}
+                                onChange={handleChange}
+                            />
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label>Description</Form.Label>
+                            <Form.Control
+                                as="textarea"
+                                rows={3}
+                                name="description"
+                                value={formData.description}
+                                onChange={handleChange}
+                            />
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label>Required Amount *</Form.Label>
+                            <Form.Control
+                                type="number"
+                                name="requiredAmount"
+                                value={formData.requiredAmount}
+                                onChange={handleChange}
+                            />
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label>Generated Amount</Form.Label>
+                            <Form.Control
+                                type="number"
+                                name="generatedAmount"
+                                value={formData.generatedAmount}
+                                onChange={handleChange}
+                            />
+                        </Form.Group>
+
+                        <Form.Group>
+                            <Form.Label>Pending Amount</Form.Label>
+                            <Form.Control
+                                type="number"
+                                name="pendingAmount"
+                                value={formData.pendingAmount}
+                                readOnly
+                            />
+                        </Form.Group>
+                    </Form>
+                </Modal.Body>
+
+                <Modal.Footer>
+                    <Button
+                        variant="secondary"
+                        onClick={() => setShowModal(false)}
+                    >
+                        Cancel
+                    </Button>
+
+                    <Button
+                        variant="primary"
+                        onClick={handleCreateIntent}
+                        disabled={loading}
+                    >
+                        {loading ? "Creating..." : "Create"}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </div>
     );
 };

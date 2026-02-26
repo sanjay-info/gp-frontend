@@ -17,6 +17,8 @@ import { GiDeliveryDrone } from "react-icons/gi";
 import { AiOutlineYoutube } from "react-icons/ai";
 import { FaHandHoldingDollar } from "react-icons/fa6";
 import { gp_logo } from "./imageUrl";
+import { FaFileCircleCheck } from "react-icons/fa6";
+
 import {
   PiClockLight,
   PiCheckCircleLight,
@@ -368,6 +370,45 @@ const SidePanel = () => {
                 Investment Details
               </MenuItem>
 
+              <SubMenu
+                label="Intent Approvals"
+                icon={<FaFileCircleCheck />}
+                defaultOpen={pathname.includes("/IntentApprovals")}
+              >
+                <MenuItem
+                  icon={<PiClockLight />}
+                  className={pathname === "/IntentApprovals/pending" ? "active" : ""}
+                  onClick={() => {
+                    navigate("/IntentApprovals/pending");
+                    handleBackdropClick();
+                  }}
+                >
+                  Pending
+                </MenuItem>
+
+                <MenuItem
+                  icon={<PiCheckCircleLight />}
+                  className={pathname === "/IntentApprovals/approved" ? "active" : ""}
+                  onClick={() => {
+                    navigate("/IntentApprovals/approved");
+                    handleBackdropClick();
+                  }}
+                >
+                  Approved
+                </MenuItem>
+
+                <MenuItem
+                  icon={<PiXCircleLight />}
+                  className={pathname === "/IntentApprovals/rejected" ? "active" : ""}
+                  onClick={() => {
+                    navigate("/IntentApprovals/rejected");
+                    handleBackdropClick();
+                  }}
+                >
+                  Rejected
+                </MenuItem>
+              </SubMenu>
+
               <MenuItem
                 onClick={() => {
                   navigate("/ApproverReport");
@@ -614,18 +655,15 @@ const SidePanel = () => {
           {item.id === 7 && (
             <Menu iconShape="square" className="ClsMenu">
 
+              {/* ---------------- Loan Approvals ---------------- */}
               <SubMenu
                 label="Loan Approvals"
                 icon={<FaHandHoldingDollar />}
                 defaultOpen={pathname.includes("/LoanApprovals")}
               >
-
-                {/* PENDING */}
                 <MenuItem
                   icon={<PiClockLight />}
-                  className={
-                    pathname === "/LoanApprovals/pending" ? "active" : ""
-                  }
+                  className={pathname === "/LoanApprovals/pending" ? "active" : ""}
                   onClick={() => {
                     navigate("/LoanApprovals/pending");
                     handleBackdropClick();
@@ -634,12 +672,9 @@ const SidePanel = () => {
                   Pending
                 </MenuItem>
 
-                {/* APPROVED */}
                 <MenuItem
                   icon={<PiCheckCircleLight />}
-                  className={
-                    pathname === "/LoanApprovals/approved" ? "active" : ""
-                  }
+                  className={pathname === "/LoanApprovals/approved" ? "active" : ""}
                   onClick={() => {
                     navigate("/LoanApprovals/approved");
                     handleBackdropClick();
@@ -648,12 +683,9 @@ const SidePanel = () => {
                   Approved
                 </MenuItem>
 
-                {/* REJECTED */}
                 <MenuItem
                   icon={<PiXCircleLight />}
-                  className={
-                    pathname === "/LoanApprovals/rejected" ? "active" : ""
-                  }
+                  className={pathname === "/LoanApprovals/rejected" ? "active" : ""}
                   onClick={() => {
                     navigate("/LoanApprovals/rejected");
                     handleBackdropClick();
@@ -661,11 +693,26 @@ const SidePanel = () => {
                 >
                   Rejected
                 </MenuItem>
-
               </SubMenu>
+
+              {/* ---------------- Intent Approvals ---------------- */}
+
+              <MenuItem
+                icon={<FaFileCircleCheck />}
+                className={
+                  pathname.includes("/IntentDetails") ? "active" : ""
+                }
+                onClick={() => {
+                  navigate("/IntentDetails");
+                  handleBackdropClick();
+                }}
+              >
+                Loan Intent
+              </MenuItem>
 
             </Menu>
           )}
+
 
         </React.Fragment>
       ))}
