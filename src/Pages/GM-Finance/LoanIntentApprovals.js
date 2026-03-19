@@ -86,17 +86,25 @@ const LoanIntentApprovals = () => {
             setActionLoading(true);
 
             let apiUrl = "";
+            let requestBody = {};
 
             if (actionType === "APPROVE") {
-                apiUrl = `/user/loanintent/approve/${selectedRow.loanIntentId}`;
+                apiUrl = `/user/loanintent/approve`;
+                requestBody = {
+                    id: selectedRow.loanIntentId
+                };
             } else {
-                apiUrl = `/user/loanintent/reject/${selectedRow.loanIntentId}?reason=${encodeURIComponent(remarks)}`;
+                apiUrl = `/user/loanintent/reject`;
+                requestBody = {
+                    id: selectedRow.loanIntentId,
+                    reason: remarks
+                };
             }
 
             const res = await PostApi(
                 "POST",
                 apiUrl,
-                null,
+                requestBody, // ✅ send body here
                 headers
             );
 
@@ -111,7 +119,6 @@ const LoanIntentApprovals = () => {
             setActionLoading(false);
         }
     };
-
 
     const closeActionModal = () => {
         setActionModalOpen(false);
