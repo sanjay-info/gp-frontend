@@ -370,44 +370,7 @@ const SidePanel = () => {
                 Investment Details
               </MenuItem>
 
-              <SubMenu
-                label="Intent Approvals"
-                icon={<FaFileCircleCheck />}
-                defaultOpen={pathname.includes("/IntentApprovals")}
-              >
-                <MenuItem
-                  icon={<PiClockLight />}
-                  className={pathname === "/IntentApprovals/pending" ? "active" : ""}
-                  onClick={() => {
-                    navigate("/IntentApprovals/pending");
-                    handleBackdropClick();
-                  }}
-                >
-                  Pending
-                </MenuItem>
 
-                <MenuItem
-                  icon={<PiCheckCircleLight />}
-                  className={pathname === "/IntentApprovals/approved" ? "active" : ""}
-                  onClick={() => {
-                    navigate("/IntentApprovals/approved");
-                    handleBackdropClick();
-                  }}
-                >
-                  Approved
-                </MenuItem>
-
-                <MenuItem
-                  icon={<PiXCircleLight />}
-                  className={pathname === "/IntentApprovals/rejected" ? "active" : ""}
-                  onClick={() => {
-                    navigate("/IntentApprovals/rejected");
-                    handleBackdropClick();
-                  }}
-                >
-                  Rejected
-                </MenuItem>
-              </SubMenu>
 
               <MenuItem
                 onClick={() => {
@@ -545,22 +508,15 @@ const SidePanel = () => {
 
                 {/* Documents directly under Loans */}
                 <MenuItem
-                  onClick={() => navigate("/DocumentMasters")}
-                  className={pathname === "/DocumentMasters" ? "active" : ""}
-                >
-                  Document Masters
-                </MenuItem>
-
-                <MenuItem
-                  onClick={() => navigate("/DocumentTemplates")}
-                  className={pathname === "/DocumentTemplates" ? "active" : ""}
-                >
-                  Document Templates
-                </MenuItem>
-
-                <MenuItem
+                  icon={<BsDatabase />}
                   onClick={() => navigate("/Documents")}
-                  className={pathname === "/Documents" ? "active" : ""}
+                  className={
+                    pathname.includes("/DocumentMasters") ||
+                      pathname.includes("/DocumentTemplates") ||
+                      pathname.includes("/Documents")
+                      ? "active"
+                      : ""
+                  }
                 >
                   Documents
                 </MenuItem>
@@ -649,7 +605,46 @@ const SidePanel = () => {
               >
                 Scheme Master
               </MenuItem>
+              <SubMenu
+                label="Intent Approvals"
+                icon={<FaFileCircleCheck />}
+                defaultOpen={pathname.includes("/IntentApprovals")}
+              >
+                <MenuItem
+                  icon={<PiClockLight />}
+                  className={pathname === "/IntentApprovals/pending" ? "active" : ""}
+                  onClick={() => {
+                    navigate("/IntentApprovals/pending");
+                    handleBackdropClick();
+                  }}
+                >
+                  Pending
+                </MenuItem>
+
+                <MenuItem
+                  icon={<PiCheckCircleLight />}
+                  className={pathname === "/IntentApprovals/approved" ? "active" : ""}
+                  onClick={() => {
+                    navigate("/IntentApprovals/approved");
+                    handleBackdropClick();
+                  }}
+                >
+                  Approved
+                </MenuItem>
+
+                <MenuItem
+                  icon={<PiXCircleLight />}
+                  className={pathname === "/IntentApprovals/rejected" ? "active" : ""}
+                  onClick={() => {
+                    navigate("/IntentApprovals/rejected");
+                    handleBackdropClick();
+                  }}
+                >
+                  Rejected
+                </MenuItem>
+              </SubMenu>
             </Menu>
+
           )}
           {/* ------------------- GM FINANCE (Role 7) -------------------- */}
           {item.id === 7 && (

@@ -263,11 +263,8 @@ const Documents = () => {
     ];
 
     return (
-        <div className="document-template-page">
-            <Header />
-            <SidePanel />
-
-            <div className="page_container">
+        <>
+            <div className="">
                 <div
                     className={sideBarCollapse ? "main_content" : "main_content collapsed"}
                 >
@@ -277,9 +274,7 @@ const Documents = () => {
                         <div className="document-header">
                             <div>
                                 <h2>Documents</h2>
-                                <p className="sub-text">
-                                    Manage documents submitted for loan applications
-                                </p>
+
                             </div>
 
                             <button
@@ -512,7 +507,7 @@ const Documents = () => {
                     <Button onClick={() => setDetailsOpen(false)}>Close</Button>
                 </DialogActions>
             </Dialog>
-        </div>
+        </>
     );
 };
 

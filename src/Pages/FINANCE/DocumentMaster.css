@@ -107,3 +107,25 @@
     font-size: 14px;
     color: #111827;
 }
+
+.doc-btn {
+    text-transform: none !important;
+    font-size: 12px !important;
+    border-radius: 6px !important;
+    padding: 4px 10px !important;
+    min-width: auto !important;
+}
+
+.doc-btn.view {
+    border-color: #1976d2 !important;
+    color: #1976d2 !important;
+}
+
+.doc-btn.edit {
+    border-color: #ed6c02 !important;
+    color: #ed6c02 !important;
+}
+
+.doc-btn.template {
+    background: #1976d2 !important;
+}

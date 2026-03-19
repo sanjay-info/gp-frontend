@@ -47,6 +47,7 @@ const DocumentMasters = () => {
     });
     const [templateOpen, setTemplateOpen] = useState(false);
     const [selectedMaster, setSelectedMaster] = useState(null);
+    const [editingId, setEditingId] = useState(null);
 
     const [templateForm, setTemplateForm] = useState({
         documentName: "",
@@ -59,6 +60,19 @@ const DocumentMasters = () => {
     useEffect(() => {
         tableRef.current?.onQueryChange();
     }, [location.pathname]);
+
+
+    const handleEdit = (row) => {
+        setForm({
+            documentName: row.documentName,
+            description: row.description,
+            isActive: row.isActive,
+        });
+
+        setEditingId(row.id);
+        setOpen(true);
+    };
+
 
     /* ---------- FETCH MASTER LIST ---------- */
     const fetchTableData = () =>
@@ -121,16 +135,33 @@ const DocumentMasters = () => {
                 isActive: form.isActive,
             };
 
-            const res = await PostApi(
-                "POST",
-                "/user/document/addmaster-template",
-                payload,
-                headers
-            );
+            let res;
+
+            if (editingId) {
+                res = await PostApi(
+                    "PUT",
+                    `/user/document/update-master-template/${editingId}`,
+                    payload,
+                    headers
+                );
+            } else {
+                res = await PostApi(
+                    "POST",
+                    "/user/document/addmaster-template",
+                    payload,
+                    headers
+                );
+            }
 
             if (res?.status === 200 || res?.status === 201) {
                 setOpen(false);
-                setForm({ documentName: "", description: "", isActive: true });
+                setEditingId(null);
+                setForm({
+                    documentName: "",
+                    description: "",
+                    isActive: true,
+                });
+
                 tableRef.current?.onQueryChange();
             }
         } catch (err) {
@@ -199,11 +230,20 @@ const DocumentMasters = () => {
         },
         {
             title: "Action",
+            field: "action",
+            width: 260,
+            cellStyle: {
+                minWidth: 260,
+            },
+            headerStyle: {
+                minWidth: 260,
+            },
             render: (row) => (
-                <Box display="flex" gap={1}>
+                <Box display="flex" gap={1} alignItems="center">
                     <Button
                         size="small"
                         variant="outlined"
+                        className="doc-btn view"
                         onClick={() => fetchMasterDetails(row.id)}
                     >
                         View
@@ -211,7 +251,17 @@ const DocumentMasters = () => {
 
                     <Button
                         size="small"
+                        variant="outlined"
+                        className="doc-btn edit"
+                        onClick={() => handleEdit(row)}
+                    >
+                        Edit
+                    </Button>
+
+                    <Button
+                        size="small"
                         variant="contained"
+                        className="doc-btn template"
                         onClick={() => {
                             setSelectedMaster(row);
                             setTemplateOpen(true);
@@ -220,17 +270,14 @@ const DocumentMasters = () => {
                         + Template
                     </Button>
                 </Box>
-            ),
+            )
         }
-
     ];
 
     return (
-        <div className="document-master-page">
-            <Header />
-            <SidePanel />
 
-            <div className="page_container">
+        <>
+            <div className="">
                 <div
                     className={sideBarCollapse ? "main_content" : "main_content collapsed"}
                 >
@@ -267,7 +314,9 @@ const DocumentMasters = () => {
 
             {/* ---------- ADD MASTER MODAL ---------- */}
             <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
-                <DialogTitle>Add Document Master</DialogTitle>
+                <DialogTitle>
+                    {editingId ? "Update Document Master" : "Add Document Master"}
+                </DialogTitle>
 
                 <DialogContent>
                     <TextField
@@ -313,7 +362,7 @@ const DocumentMasters = () => {
                         onClick={handleSave}
                         disabled={!form.documentName || loading}
                     >
-                        {loading ? "Saving..." : "Save"}
+                        {loading ? "Saving..." : editingId ? "Update" : "Save"}
                     </Button>
                 </DialogActions>
             </Dialog>
@@ -498,8 +547,8 @@ const DocumentMasters = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
+        </>
 
-        </div>
     );
 };
 

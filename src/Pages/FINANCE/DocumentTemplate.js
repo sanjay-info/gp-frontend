@@ -51,6 +51,7 @@ const DocumentTemplates = () => {
     const [docOpen, setDocOpen] = useState(false);
     const [docLoading, setDocLoading] = useState(false);
     const [selectedTemplate, setSelectedTemplate] = useState(null);
+    const [editingId, setEditingId] = useState(null);
 
     const [docForm, setDocForm] = useState({
         documentName: "",
@@ -107,9 +108,36 @@ const DocumentTemplates = () => {
             loanStatus: matchedLoan?.loanStatus,
         };
     });
+    const handleEdit = async (row) => {
+        try {
 
+            const res = await GetApi(
+                "GET",
+                `/user/document/document-template/${row.documentTemplateId}`,
+                null,
+                headers
+            );
 
+            if (res?.status === 200) {
 
+                const data = res.data;
+
+                setForm({
+                    documentName: data.documentName,
+                    documentTemplateMasterId: data.documentTemplateMasterId,
+                    submissionOnly: data.submissionOnly,
+                    receivableOnly: data.receivableOnly,
+                    returnable: data.returnable
+                });
+
+                setEditingId(data.documentTemplateId);
+                setOpen(true);
+            }
+
+        } catch (err) {
+            console.error("Edit load failed", err);
+        }
+    };
 
     /* ---------- REFRESH TABLE ---------- */
     useEffect(() => {
@@ -194,23 +222,37 @@ const DocumentTemplates = () => {
 
             const payload = {
                 documentName: form.documentName,
-                documentTemplateMaster: {
-                    id: form.documentTemplateMasterId,
-                },
                 submissionOnly: form.submissionOnly,
                 receivableOnly: form.receivableOnly,
                 returnable: form.returnable,
+                isActive: true,
+                documentTemplateMaster: {
+                    id: form.documentTemplateMasterId,
+                },
             };
 
-            const res = await PostApi(
-                "POST",
-                "/user/document/adddocument-template",
-                payload,
-                headers
-            );
+            let res;
+
+            if (editingId) {
+                res = await PostApi(
+                    "PUT",
+                    `/user/document/update-document-template/${editingId}`,
+                    payload,
+                    headers
+                );
+            } else {
+                res = await PostApi(
+                    "POST",
+                    "/user/document/adddocument-template",
+                    payload,
+                    headers
+                );
+            }
 
             if (res?.status === 200 || res?.status === 201) {
                 setOpen(false);
+                setEditingId(null);
+
                 setForm({
                     documentName: "",
                     documentTemplateMasterId: "",
@@ -218,8 +260,10 @@ const DocumentTemplates = () => {
                     receivableOnly: false,
                     returnable: false,
                 });
+
                 tableRef.current?.onQueryChange();
             }
+
         } catch (err) {
             console.error("Save failed", err);
         } finally {
@@ -302,11 +346,21 @@ const DocumentTemplates = () => {
         },
         {
             title: "Action",
+            field: "action",
+            width: 260,
+            cellStyle: {
+                minWidth: 260,
+            },
+            headerStyle: {
+                minWidth: 260,
+            },
             render: (row) => (
-                <Box display="flex" gap={1}>
+                <Box display="flex" gap={1} alignItems="center">
+
                     <Button
                         size="small"
                         variant="outlined"
+                        className="doc-btn view"
                         onClick={() => fetchTemplateDetails(row.documentTemplateId)}
                     >
                         View
@@ -314,13 +368,23 @@ const DocumentTemplates = () => {
 
                     <Button
                         size="small"
+                        variant="outlined"
+                        className="doc-btn edit"
+                        onClick={() => handleEdit(row)}
+                    >
+                        Edit
+                    </Button>
+
+                    <Button
+                        size="small"
                         variant="contained"
+                        className="doc-btn template"
                         onClick={() => {
                             setSelectedTemplate(row);
 
                             setDocForm((prev) => ({
                                 ...prev,
-                                documentTemplateId: row.documentTemplateId, // 🔥 IMPORTANT
+                                documentTemplateId: row.documentTemplateId,
                             }));
 
                             setDocOpen(true);
@@ -330,17 +394,15 @@ const DocumentTemplates = () => {
                     </Button>
 
                 </Box>
-            ),
+            )
         }
 
     ];
 
     return (
-        <div className="document-template-page">
-            <Header />
-            <SidePanel />
+        <>
 
-            <div className="page_container">
+            <div className="">
                 <div
                     className={sideBarCollapse ? "main_content" : "main_content collapsed"}
                 >
@@ -377,7 +439,9 @@ const DocumentTemplates = () => {
 
             {/* ---------- ADD TEMPLATE MODAL ---------- */}
             <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
-                <DialogTitle>Add Document Template</DialogTitle>
+                <DialogTitle>
+                    {editingId ? "Update Document Template" : "Add Document Template"}
+                </DialogTitle>
 
                 <DialogContent>
                     <TextField
@@ -460,8 +524,7 @@ const DocumentTemplates = () => {
                             loading
                         }
                     >
-                        {loading ? "Saving..." : "Save"}
-                    </Button>
+                        {loading ? "Saving..." : editingId ? "Update" : "Save"}                    </Button>
                 </DialogActions>
             </Dialog>
 
@@ -676,7 +739,7 @@ const DocumentTemplates = () => {
                 </DialogActions>
             </Dialog>
 
-        </div>
+        </>
     );
 };
 

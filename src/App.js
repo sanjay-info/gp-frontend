@@ -83,6 +83,7 @@ import Documents from './Pages/FINANCE/Document';
 import LoanApprovals from './Pages/GM-Finance/GMFinanceLoan';
 import Payments from './Pages/FINANCE/Payment';
 import LoanIntentApprovals from './Pages/GM-Finance/LoanIntentApprovals';
+import DocumentsPage from './Pages/FINANCE/DocumentsPage';
 
 
 const simplifiedConfig = {
@@ -228,7 +229,7 @@ function App() {
             <Route path='/AdminLoanIntent' element={roleId !== null && roleId !== undefined && roleId !== "" && (storedRoleId[0].id === 1 || storedRoleId[0].id === 4) ? <IntentDetails /> : <Login />}></Route>
             <Route path='/AdminLoans' element={roleId !== null && roleId !== undefined && roleId !== "" && (storedRoleId[0].id === 1 || storedRoleId[0].id === 4) ? <LoanList /> : <Login />}></Route>
             <Route path="/LoanView/:loanId" element={roleId !== null && roleId !== undefined && roleId !== "" && (storedRoleId[0].id === 1 || storedRoleId[0].id === 4) ? <LoanView /> : <Login />}></Route>
-            <Route path='/IntentView' element={roleId !== null && roleId !== undefined && roleId !== "" && (storedRoleId[0].id === 1 || storedRoleId[0].id === 4) ? <IntentView /> : <Login />}></Route>
+            <Route path='/IntentView' element={roleId !== null && roleId !== undefined && roleId !== "" && (storedRoleId[0].id === 1 || storedRoleId[0].id === 7) ? <IntentView /> : <Login />}></Route>
             <Route path='/LoanApplications' element={roleId !== null && roleId !== undefined && roleId !== "" && (storedRoleId[0].id === 1 || storedRoleId[0].id === 4) ? <LoanApplications /> : <Login />}></Route>
             <Route path='/LoanApplicationView/:loanApplicationId' element={roleId !== null && roleId !== undefined && roleId !== "" && (storedRoleId[0].id === 1 || storedRoleId[0].id === 4) ? <LoanApplicationView /> : <Login />}></Route>
             <Route path='/ViewLoanerByAdmin' element={roleId !== null && roleId !== undefined && roleId !== "" && storedRoleId[0].id === 1 ? <ViewUserAdminNew /> : <Login />}></Route>
@@ -290,7 +291,7 @@ function App() {
                   roleId !== undefined &&
                   roleId !== "" &&
                   storedRoleId[0].id === 4
-                  ? <Documents />
+                  ? <DocumentsPage />
                   : <Login />
               }
             />

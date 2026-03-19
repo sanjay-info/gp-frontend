@@ -7,6 +7,8 @@ import MaterialTable from "@material-table/core";
 import TableOptions from "../components/TableOptions";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Modal, Button, Form } from "react-bootstrap";
+import { Box } from "@mui/material";
+import "./IntentView.css";
 
 const IntentDetails = () => {
     const { PostApi } = useAppContext();
@@ -22,6 +24,7 @@ const IntentDetails = () => {
 
     const [showModal, setShowModal] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [editingId, setEditingId] = useState(null);
 
     const [formData, setFormData] = useState({
         name: "",
@@ -89,7 +92,7 @@ const IntentDetails = () => {
     };
 
     // ---------------- CREATE INTENT ----------------
-    const handleCreateIntent = async () => {
+    const handleSaveIntent = async () => {
         if (!formData.name || !formData.requiredAmount) {
             alert("Name and Required Amount are mandatory");
             return;
@@ -104,17 +107,37 @@ const IntentDetails = () => {
                 requiredAmount: Number(formData.requiredAmount),
                 generatedAmount: Number(formData.generatedAmount) || 0,
                 pendingAmount: Number(formData.pendingAmount) || 0,
+                status: true,
+                approvalStatus: "APPROVED",
+                requestedBy: "admin",
+                reviewedBy: "manager",
+                rejectionReason: null,
+                intentStatus: {
+                    intentStatusId: 2,
+                },
             };
 
-            const response = await PostApi(
-                "POST",
-                "/user/add-loanintent",
-                payload,
-                headers
-            );
+            let response;
+
+            if (editingId) {
+                response = await PostApi(
+                    "PUT",
+                    `/user/loanintent/update?id=${editingId}`,
+                    payload,
+                    headers
+                );
+            } else {
+                response = await PostApi(
+                    "POST",
+                    "/user/add-loanintent",
+                    payload,
+                    headers
+                );
+            }
 
             if (response.status === 200 || response.status === 201) {
                 setShowModal(false);
+                setEditingId(null);
 
                 setFormData({
                     name: "",
@@ -124,11 +147,12 @@ const IntentDetails = () => {
                     pendingAmount: "",
                 });
 
-                tableRef.current && tableRef.current.onQueryChange();
+                tableRef.current?.onQueryChange();
             }
+
         } catch (error) {
-            console.log("Create Intent Error:", error);
-            alert("Failed to create intent");
+            console.log("Save Intent Error:", error);
+            alert("Failed to save intent");
         } finally {
             setLoading(false);
         }
@@ -187,21 +211,51 @@ const IntentDetails = () => {
 
         {
             title: "Action",
+            field: "action",
+            width: 220,
+            cellStyle: { minWidth: 220 },
+            headerStyle: { minWidth: 220 },
             render: (row) => (
-                <button
-                    className="btn btn-primary btn-sm"
-                    onClick={() =>
-                        navigate("/IntentView", {
-                            state: { id: row.loanIntentId },
-                        })
-                    }
-                >
-                    View
-                </button>
-            ),
-        },
-    ];
+                <Box display="flex" gap={1} alignItems="center">
 
+                    <Button
+                        size="small"
+                        variant="outlined"
+                        className="doc-btn view"
+                        onClick={() =>
+                            navigate("/IntentView", {
+                                state: { id: row.loanIntentId },
+                            })
+                        }
+                    >
+                        View
+                    </Button>
+
+                    {/* <Button
+                        size="small"
+                        variant="outlined"
+                        className="doc-btn edit"
+                        onClick={() => handleEdit(row)}
+                    >
+                        Edit
+                    </Button> */}
+
+                </Box>
+            ),
+        }
+    ];
+    const handleEdit = (row) => {
+        setFormData({
+            name: row.name,
+            description: row.description,
+            requiredAmount: row.requiredAmount,
+            generatedAmount: row.generatedAmount,
+            pendingAmount: row.pendingAmount,
+        });
+
+        setEditingId(row.loanIntentId);
+        setShowModal(true);
+    };
     // ---------------- UI ----------------
     return (
         <div>
@@ -258,7 +312,9 @@ const IntentDetails = () => {
                 centered
             >
                 <Modal.Header closeButton>
-                    <Modal.Title>Create Loan Intent</Modal.Title>
+                    <Modal.Title>
+                        {editingId ? "Update Loan Intent" : "Create Loan Intent"}
+                    </Modal.Title>
                 </Modal.Header>
 
                 <Modal.Body>
@@ -326,10 +382,10 @@ const IntentDetails = () => {
 
                     <Button
                         variant="primary"
-                        onClick={handleCreateIntent}
+                        onClick={handleSaveIntent}
                         disabled={loading}
                     >
-                        {loading ? "Creating..." : "Create"}
+                        {loading ? "Saving..." : editingId ? "Update Intent" : "Create Intent"}
                     </Button>
                 </Modal.Footer>
             </Modal>
