@@ -22,13 +22,13 @@ import {
 } from "@mui/material";
 
 const STATUS_MAP = {
-    pending: "INREVIEW",
+    pending: "PENDING",
     approved: "APPROVED",
     rejected: "REJECTED",
 };
 
 const LoanIntentApprovals = () => {
-    const { GetApi, PutApi } = useAppContext();
+    const { GetApi, PostApi } = useAppContext();
     const { sideBarCollapse } = useSidebar();
     const { status } = useParams();
     const location = useLocation();
@@ -93,8 +93,8 @@ const LoanIntentApprovals = () => {
                 apiUrl = `/user/loanintent/reject/${selectedRow.loanIntentId}?reason=${encodeURIComponent(remarks)}`;
             }
 
-            const res = await PutApi(
-                "PUT",
+            const res = await PostApi(
+                "POST",
                 apiUrl,
                 null,
                 headers
@@ -180,11 +180,11 @@ const LoanIntentApprovals = () => {
                     <div className="LPA_action_wrap">
                         {/* APPROVE */}
                         <FaCheckCircle
-                            className={`LPA_action_icon approve ${currentStatus === "INREVIEW" ? "active" : "disabled"
+                            className={`LPA_action_icon approve ${currentStatus === "PENDING" ? "active" : "disabled"
                                 }`}
                             title="Approve"
                             onClick={() => {
-                                if (currentStatus !== "INREVIEW") return;
+                                if (currentStatus !== "PENDING") return;
                                 setSelectedRow(row);
                                 setActionType("APPROVE");
                                 setActionModalOpen(true);
@@ -193,11 +193,11 @@ const LoanIntentApprovals = () => {
 
                         {/* REJECT */}
                         <FaTimesCircle
-                            className={`LPA_action_icon reject ${currentStatus === "INREVIEW" ? "active" : "disabled"
+                            className={`LPA_action_icon reject ${currentStatus === "PENDING" ? "active" : "disabled"
                                 }`}
                             title="Reject"
                             onClick={() => {
-                                if (currentStatus !== "INREVIEW") return;
+                                if (currentStatus !== "PENDING") return;
                                 setSelectedRow(row);
                                 setActionType("REJECT");
                                 setActionModalOpen(true);
