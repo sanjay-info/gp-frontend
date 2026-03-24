@@ -101,51 +101,37 @@ const Userlist = () => {
         if (location.pathname === "/Loaners") opportunityRecordId = 2;
 
         const url = `/user/admin/all?filter=${filterNumber}&pageNo=${query.page}&pageSize=${query.pageSize}${opportunityRecordId
-            ? `&opportunityRecordTypeId=${opportunityRecordId}`
-            : ""
+                ? `&opportunityRecordTypeId=${opportunityRecordId}`
+                : ""
             }`;
 
         try {
             const res = await PostApi("POST", url, null, headers);
+
             let users = res.data?.data || [];
 
-            // Investors filter
-            if (location.pathname === "/Investors") {
-                users = users.filter(
-                    (u) =>
-                        !u.opportunityRecordTypes ||
-                        u.opportunityRecordTypes.some(
-                            (t) => t.opportunityRecordType?.toUpperCase() === "INVESTER"
-                        )
-                );
-            }
+            const totalCount = res.data?.totalElements || 0;
 
-            // Loaners + Account Type filter
+            // ⚠️ Keep filters minimal (prefer backend filtering)
             if (location.pathname === "/Loaners") {
                 users = users.filter((u) =>
                     u.opportunityRecordTypes?.some(
-                        (t) => t.opportunityRecordType?.toUpperCase() === "LOANER"
+                        (t) =>
+                            t.opportunityRecordType?.toUpperCase() === "LOANER"
                     )
                 );
-
-                if (accountTypeFilter !== "ALL") {
-                    users = users.filter(
-                        (u) =>
-                            u.accountType?.accountType?.toUpperCase() === accountTypeFilter
-                    );
-                }
             }
 
             return {
                 data: users,
-                page: query.page,
-                totalCount: users.length,
+                page: query.page,      // ✅ FIXED
+                totalCount: totalCount // ✅ correct
             };
-        } catch {
+        } catch (err) {
+            console.error(err);
             return { data: [], page: 0, totalCount: 0 };
         }
     };
-
     /* ================= TABLE COLUMNS ================= */
 
     const investorColumns = [
@@ -301,6 +287,9 @@ const Userlist = () => {
                                 ...TableOptions(),
                                 search: false,
                                 toolbar: false,
+                                paging: true,              // ✅ enable pagination
+                                pageSize: 5,               // default size
+                                pageSizeOptions: [5, 10, 20, 50], // dropdown
                             }}
                         />
                     </div>

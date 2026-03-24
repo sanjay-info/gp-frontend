@@ -731,7 +731,7 @@ const LoanView = () => {
                                     </div>
                                 )}
                                 <div className="LV_card">
-                                    <h4>Repayment Schedule</h4>
+                                    {activeTab === "payments" ? <h4>Payment Details</h4> : <h4>Repayment Schedule</h4>}
 
                                     <table className="LV_table">
                                         <thead>
