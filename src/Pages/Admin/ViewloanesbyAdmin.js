@@ -92,8 +92,10 @@ const ViewUserAdminNew = () => {
 
             const decryptedPan = decryptData(user.pan, user.key);
             const decryptedAadhaar = decryptData(user.aadhaar, user.key);
+            const decryptedpassportNo = decryptData(user.passportNo, user.key);
 
-            setData({ ...user, pan: decryptedPan, aadhaar: decryptedAadhaar });
+
+            setData({ ...user, pan: decryptedPan, aadhaar: decryptedAadhaar,passportNo:decryptedpassportNo });
 
             if (
                 user?.addressLine1 === user?.addressLine11 &&
@@ -166,11 +168,11 @@ const ViewUserAdminNew = () => {
             formData.append("countryCode", data.countryCode ?? "");
 
             // ── Permanent / Contact address ──
-            formData.append("permanentAddress", data.addressLine1 ?? "");
-            formData.append("permanentCity", data.city1 ?? "");
-            formData.append("permanentState", data.state1 ?? "");
-            formData.append("permanentCountry", data.country1 ?? "");
-            formData.append("permanentPincode", data.pincode1 ?? "");
+            formData.append("addressLine1", data.addressLine1 ?? "");
+            formData.append("city1", data.city1 ?? "");
+            formData.append("state1", data.state1 ?? "");
+            formData.append("country1", data.country1 ?? "");
+            formData.append("pincode1", data.pincode1 ?? "");
 
             // ── Correspondence address ──
             const corrAddr = sameAsPermanent ? data.addressLine1 : data.addressLine11;
@@ -179,11 +181,17 @@ const ViewUserAdminNew = () => {
             const corrCountry = sameAsPermanent ? data.country1 : data.country2;
             const corrPin = sameAsPermanent ? data.pincode1 : data.pincode2;
 
-            formData.append("currentAddress", corrAddr ?? "");
-            formData.append("currentCity", corrCity ?? "");
-            formData.append("currentState", corrState ?? "");
-            formData.append("currentCountry", corrCountry ?? "");
-            formData.append("currentPincode", corrPin ?? "");
+            // formData.append("currentAddress", corrAddr ?? "");
+            // formData.append("currentCity", corrCity ?? "");
+            // formData.append("currentState", corrState ?? "");
+            // formData.append("currentCountry", corrCountry ?? "");
+            // formData.append("currentPincode", corrPin ?? "");
+
+             formData.append("addressLine11", corrAddr ?? "");
+            formData.append("city2", corrCity ?? "");
+            formData.append("state2", corrState ?? "");
+            formData.append("country2", corrCountry ?? "");
+            formData.append("pincode2", corrPin ?? "");
 
             // ── Bank details ──
             formData.append("bankName", data.bankName ?? "");
@@ -324,7 +332,7 @@ const ViewUserAdminNew = () => {
                                 <div className="grid">
                                     <FormField label="PAN Number" value={maskPAN(data.pan)} />
                                     <FormField label="Aadhaar Number" value={data.aadhaar} />
-                                    <FormField label="Passport Number" value={data.passportNo} editable={editMode} onChange={(v) => handleChange("passportNo", v)} />
+                                    <FormField label="Passport Number" value={data.passportNo} />
                                     <FormField label="Nationality" value={data.nationality} editable={editMode} onChange={(v) => handleChange("nationality", v)} />
                                 </div>
                             </div>

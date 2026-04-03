@@ -106,13 +106,23 @@ const UserKycDetails = () => {
         getUserDetails(selectedOption.value)
     };
 
-    const filteredData = datalist.filter(item =>
-        item.customerId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.emailId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.userType.userType.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // const filteredData = datalist.filter(item =>
+    //     item.customerId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    //     item.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    //     item.emailId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    //     item.userType.userType.toLowerCase().includes(searchTerm.toLowerCase())
+    // );
 
+    const filteredData = datalist.filter(item => {
+    const search = searchTerm?.toLowerCase() || "";
+
+    return (
+        (item.customerId?.toLowerCase() || "").includes(search) ||
+        (item.firstName?.toLowerCase() || "").includes(search) ||
+        (item.emailId?.toLowerCase() || "").includes(search) ||
+        (item.userType?.userType?.toLowerCase() || "").includes(search)
+    );
+});
     return (
         <div>
             <Header />
